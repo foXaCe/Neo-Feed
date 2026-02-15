@@ -33,8 +33,7 @@ import kotlin.time.Instant
     tableName = "Feeds",
     indices = [
         Index(value = ["url"], unique = true),
-        Index(value = ["id", "url", "title"], unique = true)
-    ]
+    ],
 )
 data class Feed(
     @PrimaryKey(autoGenerate = true)

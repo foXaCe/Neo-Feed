@@ -37,7 +37,7 @@ import com.saulhdev.feeder.R
 import com.saulhdev.feeder.ui.icons.Phosphor
 import com.saulhdev.feeder.ui.icons.phosphor.GearSix
 import com.saulhdev.feeder.ui.icons.phosphor.Graph
-import com.saulhdev.feeder.ui.icons.phosphor.Info
+import com.saulhdev.feeder.ui.icons.phosphor.ListDashes
 import com.saulhdev.feeder.ui.pages.AboutPage
 import com.saulhdev.feeder.ui.pages.ArticleListPage
 import com.saulhdev.feeder.ui.pages.ArticlePage
@@ -50,9 +50,10 @@ import com.saulhdev.feeder.ui.pages.SourceListPage
 import com.saulhdev.feeder.ui.views.ComposeWebView
 import kotlinx.serialization.Serializable
 
-val LocalNavController = staticCompositionLocalOf<NavController> {
-    error("CompositionLocal LocalNavController not present")
-}
+val LocalNavController =
+    staticCompositionLocalOf<NavController> {
+        error("CompositionLocal LocalNavController not present")
+    }
 
 const val NAV_BASE = "nf-navigation://androidx.navigation/"
 
@@ -62,7 +63,7 @@ fun NavigationManager(
     modifier: Modifier = Modifier,
 ) {
     CompositionLocalProvider(
-        LocalNavController provides navController
+        LocalNavController provides navController,
     ) {
         NavHost(
             modifier = modifier,
@@ -73,9 +74,8 @@ fun NavigationManager(
             popEnterTransition = { fadeIn() + slideInHorizontally { -it } },
             popExitTransition = { fadeOut() + slideOutHorizontally { it / 2 } },
         ) {
-
             composable<NavRoute.Main>(
-                deepLinks = listOf(navDeepLink { uriPattern = "$NAV_BASE${Routes.MAIN}/{page}" })
+                deepLinks = listOf(navDeepLink { uriPattern = "$NAV_BASE${Routes.MAIN}/{page}" }),
             ) {
                 val args = it.toRoute<NavRoute.Main>()
                 MainPage(args.page)
@@ -85,15 +85,18 @@ fun NavigationManager(
             composable<NavRoute.Changelog> { ChangelogPage() }
             composable<NavRoute.SourceAdd> { SourceAddPage() }
             composable<NavRoute.WebView>(
-                deepLinks = listOf(navDeepLink { uriPattern = "$NAV_BASE${Routes.WEB_VIEW}/{url}" })
+                deepLinks = listOf(navDeepLink { uriPattern = "$NAV_BASE${Routes.WEB_VIEW}/{url}" }),
             ) {
                 val args = it.toRoute<NavRoute.WebView>()
                 ComposeWebView(args.url)
             }
             composable<NavRoute.ArticleView>(
-                deepLinks = listOf(navDeepLink {
-                    uriPattern = "$NAV_BASE${Routes.ARTICLE_VIEW}/{uuid}"
-                })
+                deepLinks =
+                    listOf(
+                        navDeepLink {
+                            uriPattern = "$NAV_BASE${Routes.ARTICLE_VIEW}/{uuid}"
+                        },
+                    ),
             ) {
                 val args = it.toRoute<NavRoute.ArticleView>()
                 ArticlePage(args.uuid)
@@ -112,10 +115,10 @@ object Routes {
 sealed class NavItem(
     val title: Int,
     val icon: ImageVector,
-    val content: @Composable () -> Unit = {}
+    val content: @Composable () -> Unit = {},
 ) {
     data object Feed :
-        NavItem(R.string.home, Phosphor.Info, {
+        NavItem(R.string.home, Phosphor.ListDashes, {
             ArticleListPage()
         })
 
@@ -139,17 +142,23 @@ open class NavRoute {
     data object SourceAdd : NavRoute()
 
     @Serializable
-    data class ArticleView(val uuid: String = "") : NavRoute()
+    data class ArticleView(
+        val uuid: String = "",
+    ) : NavRoute()
 
     @Serializable
     data object Changelog : NavRoute()
 
     @Serializable
-    data class Main(val page: Int = 0) : NavRoute()
+    data class Main(
+        val page: Int = 0,
+    ) : NavRoute()
 
     @Serializable
     data object License : NavRoute()
 
     @Serializable
-    data class WebView(val url: String = "") : NavRoute()
+    data class WebView(
+        val url: String = "",
+    ) : NavRoute()
 }

@@ -42,52 +42,29 @@ import kotlin.time.Clock
 /**
  * Exports OPML on a background thread
  */
-suspend fun ContentResolver.exportOpml(uri: Uri, tagsFeedMap: Map<String, List<Feed>>) =
-    withContext(Dispatchers.IO) {
-        try {
-            val time = measureTimeMillis {
+suspend fun ContentResolver.exportOpml(
+    uri: Uri,
+    tagsFeedMap: Map<String, List<Feed>>,
+) = withContext(Dispatchers.IO) {
+    try {
+        val time =
+            measureTimeMillis {
                 takePersistableUriPermission(
                     uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
                 )
                 openOutputStream(uri)?.let {
                     writeOutputStream(
                         it,
-                        tagsFeedMap
+                        tagsFeedMap,
                     )
                 }
             }
-            Log.d("OPML", "Exported OPML in $time ms on ${Thread.currentThread().name}")
-        } catch (e: Throwable) {
-            Log.e("OPML", "Failed to export OPML", e)
-            val toastMaker: ToastMaker by inject(ToastMaker::class.java)
-            toastMaker.makeToast(R.string.failed_to_export_OPML)
-            (e.localizedMessage ?: e.message)?.let { message ->
-                toastMaker.makeToast(message)
-            }
-        }
-    }
-
-/**
- * Imports OPML on a background thread
- */
-suspend fun ContentResolver.importOpml(uri: Uri) = withContext(Dispatchers.IO) {
-    try {
-        val time = measureTimeMillis {
-            val parser = OPMLParser(SourceToRoom())
-
-            openInputStream(uri).use {
-                it?.let { stream ->
-                    parser.parseInputStream(stream)
-                }
-            }
-            requestFeedSync()
-        }
-        Log.d("OPML", "Imported OPML in $time ms on ${Thread.currentThread().name}")
+        Log.d("OPML", "Exported OPML in $time ms on ${Thread.currentThread().name}")
     } catch (e: Throwable) {
-        Log.e("OPML", "Failed to import OPML", e)
+        Log.e("OPML", "Failed to export OPML", e)
         val toastMaker: ToastMaker by inject(ToastMaker::class.java)
-        toastMaker.makeToast(R.string.failed_to_import_OPML)
+        toastMaker.makeToast(R.string.failed_to_export_OPML)
         (e.localizedMessage ?: e.message)?.let { message ->
             toastMaker.makeToast(message)
         }
@@ -95,29 +72,59 @@ suspend fun ContentResolver.importOpml(uri: Uri) = withContext(Dispatchers.IO) {
 }
 
 /**
+ * Imports OPML on a background thread
+ */
+suspend fun ContentResolver.importOpml(uri: Uri) =
+    withContext(Dispatchers.IO) {
+        try {
+            val time =
+                measureTimeMillis {
+                    val parser = OPMLParser(SourceToRoom())
+
+                    openInputStream(uri).use {
+                        it?.let { stream ->
+                            parser.parseInputStream(stream)
+                        }
+                    }
+                    requestFeedSync()
+                }
+            Log.d("OPML", "Imported OPML in $time ms on ${Thread.currentThread().name}")
+        } catch (e: Throwable) {
+            Log.e("OPML", "Failed to import OPML", e)
+            val toastMaker: ToastMaker by inject(ToastMaker::class.java)
+            toastMaker.makeToast(R.string.failed_to_import_OPML)
+            (e.localizedMessage ?: e.message)?.let { message ->
+                toastMaker.makeToast(message)
+            }
+        }
+    }
+
+/**
  * Exports bookmarked articles to JSON format
  */
 suspend fun ContentResolver.exportBookmarks(
     context: Context,
     uri: Uri,
-    bookmarkedItems: List<FeedItem>
+    bookmarkedItems: List<FeedItem>,
 ) = withContext(Dispatchers.IO) {
     try {
         context.contentResolver.takePersistableUriPermission(
             uri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
         )
 
-        val exportData = BookmarksExportContainer(
-            version = 1,
-            exportDate = Clock.System.now().toEpochMilliseconds(),
-            articles = bookmarkedItems.map { it.toBookmarkedExport() }
-        )
+        val exportData =
+            BookmarksExportContainer(
+                version = 1,
+                exportDate = Clock.System.now().toEpochMilliseconds(),
+                articles = bookmarkedItems.map { it.toBookmarkedExport() },
+            )
 
-        val json = Json {
-            prettyPrint = true
-            ignoreUnknownKeys = true
-        }
+        val json =
+            Json {
+                prettyPrint = true
+                ignoreUnknownKeys = true
+            }
 
         val jsonString = json.encodeToString(exportData)
         SAFFile.write(context, uri, jsonString)
@@ -125,7 +132,7 @@ suspend fun ContentResolver.exportBookmarks(
     } catch (e: Throwable) {
         Log.e("BOOKMARKS", "Failed to export Bookmarks", e)
         val toastMaker: ToastMaker by inject(ToastMaker::class.java)
-        toastMaker.makeToast(R.string.failed_to_import_OPML)
+        toastMaker.makeToast(R.string.failed_to_export_OPML)
         (e.localizedMessage ?: e.message)?.let { message ->
             toastMaker.makeToast(message)
         }
@@ -139,54 +146,57 @@ suspend fun ContentResolver.exportBookmarks(
 suspend fun ContentResolver.importBookmarks(
     context: Context,
     uri: Uri,
-): Pair<Int, Int> = withContext(Dispatchers.IO) {
-    try {
-        takePersistableUriPermission(
-            uri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        )
+): Pair<Int, Int> =
+    withContext(Dispatchers.IO) {
+        try {
+            takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
 
-        var successCount = 0
-        var failedCount = 0
-        val jsonString = SAFFile(context, uri).read()
-            ?: return@withContext Pair(successCount, failedCount)
-        val bookmarksHandler = BookmarksToRoom()
-        val sourceHandler = SourceToRoom()
+            var successCount = 0
+            var failedCount = 0
+            val jsonString =
+                SAFFile(context, uri).read()
+                    ?: return@withContext Pair(successCount, failedCount)
+            val bookmarksHandler = BookmarksToRoom()
+            val sourceHandler = SourceToRoom()
 
-        val json = Json {
-            prettyPrint = false
-            ignoreUnknownKeys = true
-        }
+            val json =
+                Json {
+                    prettyPrint = false
+                    ignoreUnknownKeys = true
+                }
 
-        val importData = json.decodeFromString<BookmarksExportContainer>(jsonString)
+            val importData = json.decodeFromString<BookmarksExportContainer>(jsonString)
 
-        importData.articles.forEach { exportedArticle ->
-            try {
-                val feed = sourceHandler.getItem(exportedArticle.feedUrl)
+            importData.articles.forEach { exportedArticle ->
+                try {
+                    val feed = sourceHandler.getItem(exportedArticle.feedUrl)
 
-                if (feed != null) {
-                    val article = exportedArticle.toArticle(feed.id)
+                    if (feed != null) {
+                        val article = exportedArticle.toArticle(feed.id)
 
-                    bookmarksHandler.saveItem(article)
-                    successCount++
-                } else {
-                    // Feed doesn't exist (could optionally create it)
+                        bookmarksHandler.saveItem(article)
+                        successCount++
+                    } else {
+                        // Feed doesn't exist (could optionally create it)
+                        failedCount++
+                    }
+                } catch (e: Exception) {
                     failedCount++
                 }
-            } catch (e: Exception) {
-                failedCount++
             }
-        }
 
-        Log.d("BOOKMARKS", "Imported $successCount Bookmarks successfully; failed on $failedCount")
-        Pair(successCount, failedCount)
-    } catch (e: Throwable) {
-        Log.e("BOOKMARKS", "Failed to export Bookmarks", e)
-        val toastMaker: ToastMaker by inject(ToastMaker::class.java)
-        toastMaker.makeToast(R.string.failed_to_import_OPML)
-        (e.localizedMessage ?: e.message)?.let { message ->
-            toastMaker.makeToast(message)
+            Log.d("BOOKMARKS", "Imported $successCount Bookmarks successfully; failed on $failedCount")
+            Pair(successCount, failedCount)
+        } catch (e: Throwable) {
+            Log.e("BOOKMARKS", "Failed to import Bookmarks", e)
+            val toastMaker: ToastMaker by inject(ToastMaker::class.java)
+            toastMaker.makeToast(R.string.failed_to_import_OPML)
+            (e.localizedMessage ?: e.message)?.let { message ->
+                toastMaker.makeToast(message)
+            }
+            Pair(0, 0)
         }
-        Pair(0, 0)
     }
-}

@@ -18,7 +18,6 @@
 
 package com.saulhdev.feeder.ui.views
 
-import android.net.Uri
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -40,15 +39,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.navigation.compose.rememberNavController
-import com.saulhdev.feeder.ui.components.ViewWithActionBar
 import androidx.core.net.toUri
+import com.saulhdev.feeder.ui.components.ViewWithActionBar
+import com.saulhdev.feeder.ui.navigation.LocalNavController
 
 @Composable
 fun ComposeWebView(
-    pageUrl: String
+    pageUrl: String,
 ) {
-    val navController = rememberNavController()
+    val navController = LocalNavController.current
     val activity = LocalActivity.current
 
     var progress by remember { mutableFloatStateOf(0f) }
@@ -71,21 +70,23 @@ fun ComposeWebView(
         showBackButton = true,
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = paddingValues.calculateTopPadding(),
-                    start = 4.dp,
-                    end = 4.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 8.dp
-                ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = paddingValues.calculateTopPadding(),
+                        start = 4.dp,
+                        end = 4.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                    ),
         ) {
             if (isLoading) {
                 LinearProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
                 )
             }
 
@@ -97,24 +98,38 @@ fun ComposeWebView(
                         settings.setSupportZoom(true)
                         settings.builtInZoomControls = true
                         settings.displayZoomControls = false
+                        settings.allowFileAccess = false
+                        settings.allowContentAccess = false
 
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                isLoading = false
-                                title.value = view?.title ?: "Neo Feed"
-                                subTitle.value = (url ?: "").toUri().host ?: "Neo Feed"
+                        webViewClient =
+                            object : WebViewClient() {
+                                override fun onPageFinished(
+                                    view: WebView?,
+                                    url: String?,
+                                ) {
+                                    isLoading = false
+                                    title.value = view?.title ?: "Neo Feed"
+                                    subTitle.value = (url ?: "").toUri().host ?: "Neo Feed"
+                                }
+
+                                override fun onPageStarted(
+                                    view: WebView?,
+                                    url: String?,
+                                    favicon: android.graphics.Bitmap?,
+                                ) {
+                                    isLoading = true
+                                }
                             }
 
-                            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                                isLoading = true
+                        webChromeClient =
+                            object : WebChromeClient() {
+                                override fun onProgressChanged(
+                                    view: WebView?,
+                                    newProgress: Int,
+                                ) {
+                                    progress = newProgress / 100f
+                                }
                             }
-                        }
-
-                        webChromeClient = object : WebChromeClient() {
-                            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                                progress = newProgress / 100f
-                            }
-                        }
 
                         loadUrl(pageUrl)
                     }
@@ -124,7 +139,7 @@ fun ComposeWebView(
                         it.loadUrl(pageUrl)
                     }
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
     }

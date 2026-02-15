@@ -78,9 +78,10 @@ fun SourceEditPage(
 ) {
     val title = stringResource(id = R.string.edit_rss)
     val viewState by viewModel.viewState.collectAsState()
-    val editState = remember(viewState) {
-        mutableStateOf(viewState)
-    }
+    val editState =
+        remember(viewState) {
+            mutableStateOf(viewState)
+        }
     val showDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(feedId) {
@@ -96,9 +97,10 @@ fun SourceEditPage(
                 HorizontalDivider(thickness = 2.dp)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
                 ) {
                     OutlinedActionButton(
                         text = stringResource(id = R.string.action_delete),
@@ -118,19 +120,20 @@ fun SourceEditPage(
                     }
                 }
             }
-        }
+        },
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(
-                top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding(),
-                start = 8.dp,
-                end = 8.dp
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier.padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
+                    start = 8.dp,
+                    end = 8.dp,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             SourceEditView(
-                editState = editState
+                editState = editState,
             )
         }
     }
@@ -140,21 +143,22 @@ fun SourceEditPage(
             onDismissRequest = { showDialog.value = false },
             DialogProperties(
                 dismissOnBackPress = true,
-                dismissOnClickOutside = true
-            )
+                dismissOnClickOutside = true,
+            ),
         ) {
             ActionsDialogUI(
                 titleText = stringResource(id = R.string.remove_title),
-                messageText = stringResource(
-                    id = R.string.remove_desc,
-                    viewState.title,
-                ),
+                messageText =
+                    stringResource(
+                        id = R.string.remove_desc,
+                        viewState.title,
+                    ),
                 openDialogCustom = showDialog,
                 primaryText = stringResource(id = android.R.string.ok),
                 primaryAction = {
                     onDismiss()
                     viewModel.deleteFeed(feedId)
-                }
+                },
             )
         }
     }
@@ -179,28 +183,30 @@ fun SourceEditView(
                 label = {
                     Text(stringResource(id = R.string.add_input_hint))
                 },
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.None,
-                    autoCorrectEnabled = false,
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        focusTitle.requestFocus()
-                    }
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false,
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = {
+                            focusTitle.requestFocus()
+                        },
+                    ),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .interceptKey(Key.Enter) {
-                        focusTitle.requestFocus()
-                    }
-                    .interceptKey(Key.Escape) {
-                        focusManager.clearFocus()
-                    },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 64.dp)
+                        .interceptKey(Key.Enter) {
+                            focusTitle.requestFocus()
+                        }.interceptKey(Key.Escape) {
+                            focusManager.clearFocus()
+                        },
             )
         }
         item {
@@ -214,27 +220,29 @@ fun SourceEditView(
                 },
                 shape = MaterialTheme.shapes.large,
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    autoCorrectEnabled = true,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        focusTag.requestFocus()
-                    }
-                ),
-                modifier = Modifier
-                    .focusRequester(focusTitle)
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .interceptKey(Key.Enter) {
-                        focusTag.requestFocus()
-                    }
-                    .interceptKey(Key.Escape) {
-                        focusManager.clearFocus()
-                    },
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        autoCorrectEnabled = true,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = {
+                            focusTag.requestFocus()
+                        },
+                    ),
+                modifier =
+                    Modifier
+                        .focusRequester(focusTitle)
+                        .fillMaxWidth()
+                        .heightIn(min = 64.dp)
+                        .interceptKey(Key.Enter) {
+                            focusTag.requestFocus()
+                        }.interceptKey(Key.Escape) {
+                            focusManager.clearFocus()
+                        },
             )
         }
         item {
@@ -248,27 +256,29 @@ fun SourceEditView(
                 },
                 shape = MaterialTheme.shapes.large,
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    autoCorrectEnabled = true,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        focusTag.requestFocus()
-                    }
-                ),
-                modifier = Modifier
-                    .focusRequester(focusTitle)
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .interceptKey(Key.Enter) {
-                        focusTag.requestFocus()
-                    }
-                    .interceptKey(Key.Escape) {
-                        focusManager.clearFocus()
-                    }
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        autoCorrectEnabled = true,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                        },
+                    ),
+                modifier =
+                    Modifier
+                        .focusRequester(focusTag)
+                        .fillMaxWidth()
+                        .heightIn(min = 64.dp)
+                        .interceptKey(Key.Enter) {
+                            focusManager.clearFocus()
+                        }.interceptKey(Key.Escape) {
+                            focusManager.clearFocus()
+                        },
             )
         }
 
@@ -280,7 +290,7 @@ fun SourceEditView(
                     editState.value = editState.value.copy(fullTextByDefault = it)
                 },
                 index = 0,
-                groupSize = 2
+                groupSize = 2,
             )
             Spacer(modifier = Modifier.height(4.dp))
             ComposeSwitchView(
@@ -290,7 +300,7 @@ fun SourceEditView(
                     editState.value = editState.value.copy(isEnabled = it)
                 },
                 index = 1,
-                groupSize = 2
+                groupSize = 2,
             )
         }
     }
@@ -299,16 +309,17 @@ fun SourceEditView(
 @Composable
 @Preview
 fun SourceEditPagePreview() {
-    val state = remember {
-        mutableStateOf(
-            SourceEditViewState(
-                url = "https://example.com/feed",
-                title = "Example Feed",
-                fullTextByDefault = true,
-                isEnabled = true
+    val state =
+        remember {
+            mutableStateOf(
+                SourceEditViewState(
+                    url = "https://example.com/feed",
+                    title = "Example Feed",
+                    fullTextByDefault = true,
+                    isEnabled = true,
+                ),
             )
-        )
-    }
+        }
 
     SourceEditView(editState = state)
 }

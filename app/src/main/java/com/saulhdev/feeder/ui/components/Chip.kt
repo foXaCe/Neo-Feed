@@ -65,27 +65,31 @@ fun SelectChip(
     modifier: Modifier = Modifier,
     text: String,
     checked: Boolean = false,
-    colors: SelectableChipColors = FilterChipDefaults.filterChipColors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        labelColor = MaterialTheme.colorScheme.onSurface,
-        iconColor = MaterialTheme.colorScheme.onSurface,
-        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-    ),
+    colors: SelectableChipColors =
+        FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            labelColor = MaterialTheme.colorScheme.onSurface,
+            iconColor = MaterialTheme.colorScheme.onSurface,
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
     alwaysShowIcon: Boolean = true,
     onSelected: () -> Unit = {},
 ) {
     val selectionCornerRadius by animateDpAsState(
         when {
             checked -> 4.dp
-            else    -> 16.dp
-        }
+            else -> 16.dp
+        },
     )
     val icon by remember(checked) {
         mutableStateOf(
-            if (checked) Phosphor.CheckCircle
-            else Phosphor.Circle
+            if (checked) {
+                Phosphor.CheckCircle
+            } else {
+                Phosphor.Circle
+            },
         )
     }
 
@@ -96,25 +100,28 @@ fun SelectChip(
         border = null,
         selected = checked,
         leadingIcon = {
-            if (alwaysShowIcon) Icon(
-                imageVector = icon,
-                contentDescription = null,
-            )
-            else AnimatedVisibility(
-                visible = checked,
-                enter = scaleIn(),
-                exit = scaleOut(),
-            ) {
+            if (alwaysShowIcon) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                 )
+            } else {
+                AnimatedVisibility(
+                    visible = checked,
+                    enter = scaleIn(),
+                    exit = scaleOut(),
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                    )
+                }
             }
         },
         onClick = { onSelected() },
         label = {
             Text(text = text)
-        }
+        },
     )
 }
 
@@ -131,11 +138,12 @@ fun ActionChip(
         modifier = modifier,
         label = {
             Text(
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .addIf(fullWidth) {
-                        fillMaxWidth()
-                    },
+                modifier =
+                    Modifier
+                        .padding(vertical = 8.dp)
+                        .addIf(fullWidth) {
+                            fillMaxWidth()
+                        },
                 text = text,
                 textAlign = TextAlign.Center,
             )
@@ -144,21 +152,34 @@ fun ActionChip(
             icon?.let {
                 Icon(
                     imageVector = it,
-                    contentDescription = text
+                    contentDescription = text,
                 )
             }
         },
         shape = MaterialTheme.shapes.extraLarge,
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = if (positive) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.tertiaryContainer,
-            labelColor = if (positive) MaterialTheme.colorScheme.onPrimaryContainer
-            else MaterialTheme.colorScheme.onTertiaryContainer,
-            leadingIconContentColor = if (positive) MaterialTheme.colorScheme.onPrimaryContainer
-            else MaterialTheme.colorScheme.onTertiaryContainer,
-        ),
+        colors =
+            AssistChipDefaults.assistChipColors(
+                containerColor =
+                    if (positive) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.tertiaryContainer
+                    },
+                labelColor =
+                    if (positive) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onTertiaryContainer
+                    },
+                leadingIconContentColor =
+                    if (positive) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onTertiaryContainer
+                    },
+            ),
         border = null,
-        onClick = onClick
+        onClick = onClick,
     )
 }
 
@@ -171,34 +192,35 @@ fun ChipsSwitch(
     firstSelected: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val (firstSelected, selectFirst) = remember { mutableStateOf(firstSelected) }
+    val (isFirstSelected, selectFirst) = remember(firstSelected) { mutableStateOf(firstSelected) }
 
     SingleChoiceSegmentedButtonRow(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth(),
         space = 24.dp,
     ) {
         SegmentedTabButton(
             text = stringResource(id = firstTextId),
             icon = firstIcon,
-            selected = { firstSelected },
+            selected = { isFirstSelected },
             index = 0,
             count = 2,
             onClick = {
                 onCheckedChange(true)
                 selectFirst(true)
-            }
+            },
         )
         SegmentedTabButton(
             text = stringResource(id = secondTextId),
             icon = secondIcon,
-            selected = { !firstSelected },
+            selected = { !isFirstSelected },
             index = 1,
             count = 2,
             onClick = {
                 onCheckedChange(false)
                 selectFirst(false)
-            }
+            },
         )
     }
 }
@@ -208,34 +230,40 @@ fun DeSelectAll(
     completeList: List<String>,
     selectedList: SnapshotStateList<String>,
 ) {
-    if (completeList.size > 1) Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        AnimatedVisibility(
-            visible = selectedList.isNotEmpty(),
-            enter = fadeIn()
-                    + slideInHorizontally { w -> -w }
-                    + expandHorizontally(expandFrom = Alignment.Start, clip = false),
-            exit = fadeOut()
-                    + slideOutHorizontally { w -> -w }
-                    + shrinkHorizontally(shrinkTowards = Alignment.Start, clip = false),
+    if (completeList.size > 1) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            FilledTonalButton(onClick = { selectedList.clear() }) {
-                Text(text = stringResource(id = R.string.select_all))
+            AnimatedVisibility(
+                visible = selectedList.isNotEmpty(),
+                enter =
+                    fadeIn() +
+                        slideInHorizontally { w -> -w } +
+                        expandHorizontally(expandFrom = Alignment.Start, clip = false),
+                exit =
+                    fadeOut() +
+                        slideOutHorizontally { w -> -w } +
+                        shrinkHorizontally(shrinkTowards = Alignment.Start, clip = false),
+            ) {
+                FilledTonalButton(onClick = { selectedList.clear() }) {
+                    Text(text = stringResource(id = R.string.select_all))
+                }
             }
-        }
-        AnimatedVisibility(
-            visible = selectedList.size != completeList.size,
-            enter = fadeIn()
-                    + slideInHorizontally { w -> w }
-                    + expandHorizontally(expandFrom = Alignment.End, clip = false),
-            exit = fadeOut()
-                    + slideOutHorizontally { w -> w }
-                    + shrinkHorizontally(shrinkTowards = Alignment.End, clip = false),
-        ) {
-            FilledTonalButton(onClick = { selectedList.addAll(completeList - selectedList) }) {
-                Text(text = stringResource(id = R.string.deselect_all))
+            AnimatedVisibility(
+                visible = selectedList.size != completeList.size,
+                enter =
+                    fadeIn() +
+                        slideInHorizontally { w -> w } +
+                        expandHorizontally(expandFrom = Alignment.End, clip = false),
+                exit =
+                    fadeOut() +
+                        slideOutHorizontally { w -> w } +
+                        shrinkHorizontally(shrinkTowards = Alignment.End, clip = false),
+            ) {
+                FilledTonalButton(onClick = { selectedList.addAll(completeList - selectedList) }) {
+                    Text(text = stringResource(id = R.string.deselect_all))
+                }
             }
         }
     }

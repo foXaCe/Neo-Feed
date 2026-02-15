@@ -22,6 +22,7 @@ import android.util.SparseIntArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.saulhdev.feeder.R
 import com.saulhdev.feeder.data.db.models.FeedItem
@@ -33,22 +34,22 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
     private var theme: SparseIntArray? = null
 
     fun replace(new: List<FeedItem>) {
-        if (new != list) {
-            list = new
-            notifyDataSetChanged()
-        }
+        val diffResult = DiffUtil.calculateDiff(FeedItemDiffCallback(list, new))
+        list = new
+        diffResult.dispatchUpdatesTo(this)
     }
 
     fun setTheme(theme: SparseIntArray) {
         this.theme = theme
-        notifyDataSetChanged()
+        notifyItemRangeChanged(0, list.size)
     }
 
-    override fun getItemCount(): Int {
-        return list.size
-    }
+    override fun getItemCount(): Int = list.size
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FeedViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): FeedViewHolder {
         if (!::layoutInflater.isInitialized) layoutInflater = LayoutInflater.from(parent.context)
 
         val layoutResource = R.layout.feed_card_story_large
@@ -56,10 +57,35 @@ class FeedAdapter : RecyclerView.Adapter<FeedAdapter.FeedViewHolder>() {
         return FeedViewHolder(viewType, layoutInflater.inflate(layoutResource, parent, false))
     }
 
-    override fun onBindViewHolder(holder: FeedViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: FeedViewHolder,
+        position: Int,
+    ) {
         val item = list[position]
         StoryCardBinder.bind(theme, item, holder.itemView)
     }
 
-    inner class FeedViewHolder(val type: Int, itemView: View) : RecyclerView.ViewHolder(itemView)
+    inner class FeedViewHolder(
+        val type: Int,
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView)
+
+    private class FeedItemDiffCallback(
+        private val oldList: List<FeedItem>,
+        private val newList: List<FeedItem>,
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = oldList.size
+
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(
+            oldItemPosition: Int,
+            newItemPosition: Int,
+        ): Boolean = oldList[oldItemPosition].id == newList[newItemPosition].id
+
+        override fun areContentsTheSame(
+            oldItemPosition: Int,
+            newItemPosition: Int,
+        ): Boolean = oldList[oldItemPosition] == newList[newItemPosition]
+    }
 }

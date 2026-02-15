@@ -73,8 +73,6 @@ import androidx.compose.ui.unit.dp
 import com.saulhdev.feeder.NeoApp
 import com.saulhdev.feeder.R
 import com.saulhdev.feeder.data.content.FeedPreferences
-import com.saulhdev.feeder.utils.extensions.koinNeoViewModel
-import com.saulhdev.feeder.utils.extensions.launchView
 import com.saulhdev.feeder.manager.sync.SyncRestClient
 import com.saulhdev.feeder.ui.components.ArticleItem
 import com.saulhdev.feeder.ui.components.BookmarkItem
@@ -87,6 +85,8 @@ import com.saulhdev.feeder.ui.icons.phosphor.CaretUp
 import com.saulhdev.feeder.ui.icons.phosphor.Filter
 import com.saulhdev.feeder.ui.icons.phosphor.Filtered
 import com.saulhdev.feeder.ui.icons.phosphor.Power
+import com.saulhdev.feeder.utils.extensions.koinNeoViewModel
+import com.saulhdev.feeder.utils.extensions.launchView
 import com.saulhdev.feeder.utils.openLinkInCustomTab
 import com.saulhdev.feeder.viewmodels.ArticleListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -141,7 +141,9 @@ fun ArticleListPage(
                                     scaffoldState.bottomSheetState.partialExpand()
                                 }
                             }
-                        } else Spacer(modifier = Modifier.height(8.dp))
+                        } else {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     },
                 ) {
                     Scaffold(
@@ -149,43 +151,49 @@ fun ArticleListPage(
                         containerColor = Color.Transparent,
                         topBar = {
                             TopAppBar(
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.background,
-                                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                                ),
+                                colors =
+                                    TopAppBarDefaults.topAppBarColors(
+                                        containerColor = MaterialTheme.colorScheme.background,
+                                        scrolledContainerColor = MaterialTheme.colorScheme.background,
+                                    ),
                                 title = { Text(text = stringResource(id = R.string.app_name)) },
                                 scrollBehavior = scrollBehavior,
                                 actions = {
                                     IconButton(
-                                        modifier = Modifier
-                                            .size(size = 40.dp)
-                                            .clip(CircleShape),
+                                        modifier =
+                                            Modifier
+                                                .size(size = 40.dp)
+                                                .clip(CircleShape),
                                         onClick = {
                                             scope.launch {
                                                 scaffoldState.bottomSheetState.expand()
                                             }
-                                        }
+                                        },
                                     ) {
                                         Icon(
                                             imageVector = if (state.isFilterModified) Phosphor.Filter else Phosphor.Filtered,
                                             contentDescription = stringResource(id = R.string.sorting_order),
-                                            tint = MaterialTheme.colorScheme.primary
+                                            tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
 
                                     Surface(
-                                        color = if (showBookmarks) MaterialTheme.colorScheme.primaryContainer
-                                        else Color.Transparent,
+                                        color =
+                                            if (showBookmarks) {
+                                                MaterialTheme.colorScheme.primaryContainer
+                                            } else {
+                                                Color.Transparent
+                                            },
                                         shape = MaterialTheme.shapes.large,
                                         onClick = {
                                             showBookmarks = !showBookmarks
-                                        }
+                                        },
                                     ) {
                                         Icon(
                                             modifier = Modifier.padding(8.dp),
                                             imageVector = Phosphor.Bookmarks,
                                             contentDescription = stringResource(id = R.string.title_bookmarks),
-                                            tint = MaterialTheme.colorScheme.primary
+                                            tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
 
@@ -205,7 +213,7 @@ fun ArticleListPage(
                                                     imageVector = Phosphor.ArrowCounterClockwise,
                                                     contentDescription = null,
                                                 )
-                                            }
+                                            },
                                         )
                                         HorizontalDivider()
 
@@ -222,10 +230,10 @@ fun ArticleListPage(
                                                     imageVector = Phosphor.Power,
                                                     contentDescription = null,
                                                 )
-                                            }
+                                            },
                                         )
                                     }
-                                }
+                                },
                             )
                         },
                         floatingActionButton = {
@@ -249,89 +257,96 @@ fun ArticleListPage(
                                     )
                                 }
                             }
-                        }
+                        },
                     ) { paddingValues ->
                         Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues)
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingValues),
                         ) {
                             when {
-                                showBookmarks -> LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    contentPadding = PaddingValues(8.dp)
-                                ) {
-                                    items(bookmarked.bookmarkedArticles, key = { it.id }) { item ->
-                                        BookmarkItem(
-                                            article = item.article,
-                                            feed = item.feed,
-                                            onClickAction = { article ->
-                                                if (prefs.openInBrowser.getValue()) {
-                                                    context.launchView(article.link ?: "")
-                                                } else {
+                                showBookmarks -> {
+                                    LazyColumn(
+                                        state = listState,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                        contentPadding = PaddingValues(8.dp),
+                                    ) {
+                                        items(bookmarked.bookmarkedArticles, key = { it.id }) { item ->
+                                            BookmarkItem(
+                                                article = item.article,
+                                                feed = item.feed,
+                                                onClickAction = { article ->
+                                                    if (prefs.openInBrowser.getValue()) {
+                                                        context.launchView(article.link ?: "")
+                                                    } else {
+                                                        scope.launch {
+                                                            if (prefs.offlineReader.getValue()) {
+                                                                scope.launch {
+                                                                    paneNavigator.navigateTo(
+                                                                        ListDetailPaneScaffoldRole.Detail,
+                                                                        article.uuid,
+                                                                    )
+                                                                }
+                                                            } else {
+                                                                article.link?.let {
+                                                                    openLinkInCustomTab(
+                                                                        context,
+                                                                        it,
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                     scope.launch {
+                                                        viewModel.unpinArticle(article.uuid)
+                                                    }
+                                                },
+                                                onRemoveAction = {
+                                                    scope.launch {
+                                                        viewModel.bookmarkArticle(it.uuid, false)
+                                                    }
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+
+                                else -> {
+                                    PullToRefreshLazyColumn(
+                                        isRefreshing = state.isSyncing,
+                                        onRefresh = syncClient::syncAllFeeds,
+                                        listState = listState,
+                                        content = {
+                                            items(state.articles, key = { it.id }) { item ->
+                                                ArticleItem(
+                                                    article = item,
+                                                    onBookmark = {
+                                                        viewModel.bookmarkArticle(item.id, it)
+                                                    },
+                                                ) {
+                                                    if (prefs.openInBrowser.getValue()) {
+                                                        context.launchView(item.link)
+                                                    } else {
                                                         if (prefs.offlineReader.getValue()) {
                                                             scope.launch {
                                                                 paneNavigator.navigateTo(
                                                                     ListDetailPaneScaffoldRole.Detail,
-                                                                    article.uuid
+                                                                    item.id,
                                                                 )
                                                             }
                                                         } else {
                                                             openLinkInCustomTab(
                                                                 context,
-                                                                article.link!!
+                                                                item.link,
                                                             )
                                                         }
                                                     }
                                                 }
-                                                scope.launch {
-                                                    viewModel.unpinArticle(article.uuid)
-                                                }
-                                            },
-                                            onRemoveAction = {
-                                                scope.launch {
-                                                    viewModel.bookmarkArticle(it.uuid, false)
-                                                }
                                             }
-                                        )
-                                    }
+                                        },
+                                    )
                                 }
-
-                                else          -> PullToRefreshLazyColumn(
-                                    isRefreshing = state.isSyncing,
-                                    onRefresh = syncClient::syncAllFeeds,
-                                    listState = listState,
-                                    content = {
-                                        items(state.articles, key = { it.id }) { item ->
-                                            ArticleItem(
-                                                article = item,
-                                                onBookmark = {
-                                                    viewModel.bookmarkArticle(item.id, it)
-                                                },
-                                            ) {
-                                                if (prefs.openInBrowser.getValue()) {
-                                                    context.launchView(item.link)
-                                                } else {
-                                                    if (prefs.offlineReader.getValue()) {
-                                                        scope.launch {
-                                                            paneNavigator.navigateTo(
-                                                                ListDetailPaneScaffoldRole.Detail,
-                                                                item.id
-                                                            )
-                                                        }
-                                                    } else {
-                                                        openLinkInCustomTab(
-                                                            context,
-                                                            item.link
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                )
                             }
                         }
                     }
@@ -339,9 +354,12 @@ fun ArticleListPage(
             }
         },
         detailPane = {
-            articleId.value = paneNavigator.currentDestination
-                ?.takeIf { it.pane == this.paneRole }?.contentKey
-                ?.toString().orEmpty()
+            articleId.value =
+                paneNavigator.currentDestination
+                    ?.takeIf { it.pane == this.paneRole }
+                    ?.contentKey
+                    ?.toString()
+                    .orEmpty()
 
             articleId.value.takeIf { it.isNotEmpty() }?.let { id ->
                 AnimatedPane {
@@ -352,6 +370,6 @@ fun ArticleListPage(
                     }
                 }
             }
-        }
+        },
     )
 }

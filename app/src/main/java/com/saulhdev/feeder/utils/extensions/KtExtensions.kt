@@ -30,6 +30,7 @@ import androidx.core.view.WindowCompat
 const val LIGHT_BORDER = 0.5f
 
 fun Int.isLight() = ColorUtils.calculateLuminance(this) > LIGHT_BORDER
+
 fun Int.isDark() = ColorUtils.calculateLuminance(this) < LIGHT_BORDER
 
 fun Bundle.dump(tag: String) {
@@ -55,6 +56,6 @@ fun Window.clearLightFlags() {
 @ColorInt
 fun Color?.toInt(): Int {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) return Color.BLACK
-    this ?: Color.BLACK
-    return Color.rgb(this!!.red(), this.green(), this.blue())
+    if (this == null) return Color.BLACK
+    return Color.rgb(red(), green(), blue())
 }

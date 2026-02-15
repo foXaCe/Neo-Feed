@@ -87,7 +87,7 @@ fun sloppyLinkToStrictURL(url: String): URL =
         // If no exception, it's valid
         URL(url)
     } catch (_: MalformedURLException) {
-        URL("http://$url")
+        URL("https://$url")
     }
 
 /**

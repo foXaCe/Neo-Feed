@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -16,21 +15,12 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
 
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("src/main/java")
-            aidl.srcDirs("src/main/aidl")
-            res.srcDirs("src/main/res")
-        }
-    }
-
     buildFeatures {
-        dataBinding = true
         viewBinding = true
         buildConfig = true
         aidl = true
@@ -42,7 +32,11 @@ android {
     }
 
     kotlin {
-        jvmToolchain(libs.versions.jvmVersion.get().toInt())
+        jvmToolchain(
+            libs.versions.jvmVersion
+                .get()
+                .toInt(),
+        )
     }
 }
 

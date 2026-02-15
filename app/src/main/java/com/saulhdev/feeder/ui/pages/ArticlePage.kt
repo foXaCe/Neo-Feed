@@ -1,6 +1,5 @@
 package com.saulhdev.feeder.ui.pages
 
-
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -31,7 +30,6 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
 import com.saulhdev.feeder.MainActivity
 import com.saulhdev.feeder.R
 import com.saulhdev.feeder.ui.components.OverflowMenu
@@ -44,6 +42,7 @@ import com.saulhdev.feeder.ui.icons.phosphor.BookOpenUser
 import com.saulhdev.feeder.ui.icons.phosphor.HeartStraight
 import com.saulhdev.feeder.ui.icons.phosphor.HeartStraightFill
 import com.saulhdev.feeder.ui.icons.phosphor.ShareNetwork
+import com.saulhdev.feeder.ui.navigation.LocalNavController
 import com.saulhdev.feeder.ui.navigation.Routes
 import com.saulhdev.feeder.ui.theme.LinkTextStyle
 import com.saulhdev.feeder.utils.blobFile
@@ -97,7 +96,7 @@ fun ArticlePage(
     }
     val feedTitle by remember { derivedStateOf { state?.source?.title ?: "Neo Feed" } }
 
-    val navController = rememberNavController()
+    val navController = LocalNavController.current
     BackHandler(onDismiss == null) {
         if (navController.currentBackStackEntry?.destination?.route == null) {
             activity?.finish()
@@ -107,34 +106,44 @@ fun ArticlePage(
     }
 
     val dateTimeFormat: DateTimeFormatter =
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT)
+        DateTimeFormatter
+            .ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT)
             .withLocale(Locale.getDefault())
 
-    val authorDate = when {
-        state?.article?.author == null && state?.article?.pubDate != null && (state?.article?.pubDate
-            ?: 0L) > 0L ->
-            stringResource(
-                R.string.on_date,
-                Instant.fromEpochMilliseconds(state?.article?.pubDate ?: 0L)
-                    .toLocalDateTime(TimeZone.currentSystemDefault())
-                    .toJavaLocalDateTime()
-                    .format(dateTimeFormat)
-            )
+    val authorDate =
+        when {
+            state?.article?.author == null && state?.article?.pubDate != null && (
+                state?.article?.pubDate
+                    ?: 0L
+            ) > 0L -> {
+                stringResource(
+                    R.string.on_date,
+                    Instant
+                        .fromEpochMilliseconds(state?.article?.pubDate ?: 0L)
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .toJavaLocalDateTime()
+                        .format(dateTimeFormat),
+                )
+            }
 
-        state?.article?.author != null && (state?.article?.pubDate ?: 0L) > 0L ->
-            stringResource(
-                R.string.by_author_on_date,
-                // Must wrap author in unicode marks to ensure it formats
-                // correctly in RTL
-                context.unicodeWrap(state?.article?.author ?: ""),
-                Instant.fromEpochMilliseconds(state?.article?.pubDate ?: 0L)
-                    .toLocalDateTime(TimeZone.currentSystemDefault())
-                    .toJavaLocalDateTime()
-                    .format(dateTimeFormat)
-            )
+            state?.article?.author != null && (state?.article?.pubDate ?: 0L) > 0L -> {
+                stringResource(
+                    R.string.by_author_on_date,
+                    // Must wrap author in unicode marks to ensure it formats
+                    // correctly in RTL
+                    context.unicodeWrap(state?.article?.author ?: ""),
+                    Instant
+                        .fromEpochMilliseconds(state?.article?.pubDate ?: 0L)
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .toJavaLocalDateTime()
+                        .format(dateTimeFormat),
+                )
+            }
 
-        else -> null
-    }
+            else -> {
+                null
+            }
+        }
 
     ViewWithActionBar(
         title = title,
@@ -150,8 +159,12 @@ fun ArticlePage(
                 context.launchView(currentUrl)
             }
             RoundButton(
-                icon = if (state?.article?.bookmarked ?: false) Phosphor.HeartStraightFill
-                else Phosphor.HeartStraight,
+                icon =
+                    if (state?.article?.bookmarked ?: false) {
+                        Phosphor.HeartStraightFill
+                    } else {
+                        Phosphor.HeartStraight
+                    },
                 description = stringResource(id = R.string.share),
             ) {
                 viewModel.bookmarkArticle(articleId, !(state?.article?.bookmarked ?: false))
@@ -168,7 +181,7 @@ fun ArticlePage(
                         hideMenu()
                         context.shareIntent(currentUrl, title)
                     },
-                    text = { Text(text = stringResource(id = R.string.share)) }
+                    text = { Text(text = stringResource(id = R.string.share)) },
                 )
                 DropdownMenuItem(
                     leadingIcon = {
@@ -181,29 +194,31 @@ fun ArticlePage(
                         hideMenu()
                         context.launchView("https://www.smry.ai/$currentUrl")
                     },
-                    text = { Text(text = stringResource(id = R.string.action_open_smry)) }
+                    text = { Text(text = stringResource(id = R.string.action_open_smry)) },
                 )
             }
-        }
+        },
     ) { paddingValues ->
         SelectionContainer {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        top = paddingValues.calculateTopPadding(),
-                        start = 4.dp,
-                        end = 4.dp,
-                        bottom = paddingValues.calculateBottomPadding() + 8.dp
-                    ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = paddingValues.calculateTopPadding(),
+                            start = 4.dp,
+                            end = 4.dp,
+                            bottom = paddingValues.calculateBottomPadding() + 8.dp,
+                        ),
             ) {
                 item {
                     WithBidiDeterminedLayoutDirection(paragraph = title) {
                         Text(
                             text = title,
                             style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(),
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -212,17 +227,17 @@ fun ArticlePage(
                         Text(
                             text = feedTitle,
                             style = MaterialTheme.typography.titleMedium.merge(LinkTextStyle()),
-                            modifier = Modifier
-                                .wrapContentWidth()
-                                .clearAndSetSemantics {
-                                    contentDescription = feedTitle
-                                }
-                                .clickable {
-                                    MainActivity.navigateIntent(
-                                        context,
-                                        "${Routes.WEB_VIEW}/${state?.article?.link?.urlEncode()}"
-                                    )
-                                }
+                            modifier =
+                                Modifier
+                                    .wrapContentWidth()
+                                    .clearAndSetSemantics {
+                                        contentDescription = feedTitle
+                                    }.clickable {
+                                        MainActivity.navigateIntent(
+                                            context,
+                                            "${Routes.WEB_VIEW}/${state?.article?.link?.urlEncode()}",
+                                        )
+                                    },
                         )
                     }
 
@@ -232,8 +247,9 @@ fun ArticlePage(
                             Text(
                                 text = authorDate,
                                 style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth(),
                             )
                         }
                     }
@@ -247,7 +263,7 @@ fun ArticlePage(
                                 inputStream = it,
                                 baseUrl = state?.article?.link ?: "",
                                 imagePlaceholder = R.drawable.placeholder_image_article_day,
-                                onLinkClick = context::launchView
+                                onLinkClick = context::launchView,
                             )
                         }
                     } else {
@@ -262,7 +278,7 @@ fun ArticlePage(
                                 inputStream = it,
                                 baseUrl = state?.article?.link ?: "",
                                 imagePlaceholder = R.drawable.placeholder_image_article_day,
-                                onLinkClick = context::launchView
+                                onLinkClick = context::launchView,
                             )
                         }
                     } else {

@@ -264,29 +264,34 @@ class OverlayView(
         button.backgroundTintList = ColorStateList.valueOf(backgroundTint)
     }
 
+    private var bookmarkCollectionJob: kotlinx.coroutines.Job? = null
+
     private fun initHeader() {
         val toggleButton = rootView.findViewById<MaterialButton>(R.id.header_bookmark)
 
         updateToggleColor(toggleButton, bookmarkVisible)
         toggleButton.setOnClickListener {
-            mainScope.launch {
-                if (bookmarkVisible) {
-                    bookmarkVisible = false
-                    toggleButton.isChecked = bookmarkVisible
-                    updateToggleColor(toggleButton, bookmarkVisible)
-                    viewModel.articleListState.collect {
-                        adapter.replace(it.articles)
-                        adapter.notifyDataSetChanged()
+            bookmarkCollectionJob?.cancel()
+            if (bookmarkVisible) {
+                bookmarkVisible = false
+                toggleButton.isChecked = bookmarkVisible
+                updateToggleColor(toggleButton, bookmarkVisible)
+                bookmarkCollectionJob =
+                    mainScope.launch {
+                        viewModel.articleListState.collect {
+                            adapter.replace(it.articles)
+                        }
                     }
-                } else {
-                    bookmarkVisible = true
-                    toggleButton.isChecked = bookmarkVisible
-                    updateToggleColor(toggleButton, bookmarkVisible)
-                    viewModel.bookmarksState.collect {
-                        adapter.replace(it.bookmarkedArticles)
-                        adapter.notifyDataSetChanged()
+            } else {
+                bookmarkVisible = true
+                toggleButton.isChecked = bookmarkVisible
+                updateToggleColor(toggleButton, bookmarkVisible)
+                bookmarkCollectionJob =
+                    mainScope.launch {
+                        viewModel.bookmarksState.collect {
+                            adapter.replace(it.bookmarkedArticles)
+                        }
                     }
-                }
             }
         }
 

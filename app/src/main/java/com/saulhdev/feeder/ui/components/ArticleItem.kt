@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 fun ArticleItem(
     article: FeedItem,
     onBookmark: suspend (Boolean) -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val content = article.toStoryCardContent()
     val context = LocalContext.current
@@ -46,33 +46,38 @@ fun ArticleItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ),
         onClick = {
             onClick()
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .padding(8.dp),
+            modifier =
+                Modifier
+                    .padding(8.dp),
         ) {
-            if (content.backgroundUrl.isNotEmpty()
-                && !content.backgroundUrl.contains(".rss")
+            if (content.backgroundUrl.isNotEmpty() &&
+                !content.backgroundUrl.contains(".rss")
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(content.backgroundUrl)
-                        .crossfade(true)
-                        .crossfade(500)
-                        .build(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .clip(MaterialTheme.shapes.medium),
+                    model =
+                        ImageRequest
+                            .Builder(LocalContext.current)
+                            .data(content.backgroundUrl)
+                            .crossfade(true)
+                            .crossfade(500)
+                            .build(),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                            .clip(MaterialTheme.shapes.medium),
                     contentScale = ContentScale.Crop,
-                    contentDescription = ""
+                    contentDescription = null,
                 )
             }
 
@@ -85,8 +90,12 @@ fun ArticleItem(
             )
 
             if (content.text.isNotEmpty()) {
+                val parsedText =
+                    remember(content.text) {
+                        Html.fromHtml(content.text, 0).toString()
+                    }
                 Text(
-                    text = Html.fromHtml(content.text, 0).toString(),
+                    text = parsedText,
                     modifier = Modifier.padding(top = 8.dp),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 5,
@@ -94,29 +103,32 @@ fun ArticleItem(
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
-                    modifier = Modifier
-                        .weight(2f)
+                    modifier =
+                        Modifier
+                            .weight(2f),
                 ) {
                     Text(
                         text = content.source.title,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = RelativeTimeHelper.getDateFormattedRelative(
-                            LocalContext.current,
-                            (article.timeMillis / 1000) - 1000
-                        ),
+                        text =
+                            RelativeTimeHelper.getDateFormattedRelative(
+                                LocalContext.current,
+                                (article.timeMillis / 1000) - 1000,
+                            ),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 Row {
@@ -134,14 +146,15 @@ fun ArticleItem(
                     Spacer(modifier = Modifier.size(8.dp))
 
                     ShareButton {
-                        val intent = Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                putExtra(Intent.EXTRA_TEXT, content.link)
-                                putExtra(Intent.EXTRA_TITLE, content.title)
-                                type = "text/plain"
-                            },
-                            null,
-                        )
+                        val intent =
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).apply {
+                                    putExtra(Intent.EXTRA_TEXT, content.link)
+                                    putExtra(Intent.EXTRA_TITLE, content.title)
+                                    type = "text/plain"
+                                },
+                                null,
+                            )
                         context.startActivity(intent)
                     }
                 }

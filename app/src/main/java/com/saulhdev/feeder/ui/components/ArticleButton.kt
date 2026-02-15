@@ -21,8 +21,6 @@ package com.saulhdev.feeder.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -52,7 +50,6 @@ fun FavoriteButton(
     bookmarked: Boolean,
     onClick: () -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     val coroutineScope = rememberCoroutineScope()
     val scale = remember { Animatable(1f) }
     val favoriteIcon by remember(bookmarked) {
@@ -90,28 +87,12 @@ fun FavoriteButton(
     ) {
         Icon(
             imageVector = favoriteIcon,
-            contentDescription = " ",
+            contentDescription = stringResource(R.string.title_bookmarks),
             tint = favoriteColor,
             modifier =
                 Modifier
                     .scale(scale = scale.value)
-                    .size(size = 28.dp)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                    ) {
-                        coroutineScope.launch {
-                            scale.animateTo(
-                                0.8f,
-                                animationSpec = tween(100),
-                            )
-                            scale.animateTo(
-                                1f,
-                                animationSpec = tween(100),
-                            )
-                            onClick()
-                        }
-                    },
+                    .size(size = 28.dp),
         )
     }
 }

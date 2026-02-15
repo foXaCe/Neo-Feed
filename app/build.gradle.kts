@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -36,15 +34,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        multiDexEnabled = true
-    }
-
-    applicationVariants.all {
-        val variant = this
-        outputs.all {
-            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "Neo_Feed_${variant.versionName}_${variant.name}.apk"
-        }
     }
 
     buildTypes {
@@ -58,23 +47,14 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
         all {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
-        }
-    }
-
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("src/main/java")
-            aidl.srcDirs("src/main/aidl")
-            assets.srcDirs("src/main/assets")
-            res.srcDirs("src/main/res")
         }
     }
 
@@ -84,12 +64,15 @@ android {
     }
 
     kotlin {
-        jvmToolchain(libs.versions.jvmVersion.get().toInt())
+        jvmToolchain(
+            libs.versions.jvmVersion
+                .get()
+                .toInt(),
+        )
     }
 
     buildFeatures {
         compose = true
-        dataBinding = true
         viewBinding = true
         buildConfig = true
         aidl = true
@@ -114,10 +97,9 @@ dependencies {
     implementation(libs.stdlib)
     implementation(libs.serialization.json)
 
-    //Core
+    // Core
     implementation(libs.appcompat)
     implementation(libs.core.ktx)
-    implementation(libs.multidex)
     implementation(libs.swiperefreshlayout)
     implementation(libs.work.runtime.ktx)
     implementation(libs.datetime)
@@ -132,7 +114,7 @@ dependencies {
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel.ktx)
 
-    //Compose
+    // Compose
     api(platform(libs.compose.bom))
     implementation(libs.compose.animation)
     implementation(libs.compose.foundation)
@@ -143,28 +125,28 @@ dependencies {
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.adaptive.navigation)
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.navigation.compose)
 
-    //Room
+    // Room
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
 
-    //Squareup
+    // Squareup
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.retrofit) { exclude(module = "okhttp") }
     implementation(libs.retrofit.converter.gson)
 
-    //Coil
+    // Coil
     implementation(libs.coil)
     implementation(libs.coil.compose)
 
-    //Koin
+    // Koin
     api(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.android)
@@ -173,7 +155,7 @@ dependencies {
     implementation(libs.koin.annotations)
     ksp(libs.koin.compiler)
 
-    //Libs
+    // Libs
     implementation(libs.threetenabp)
     implementation(libs.rome) { exclude(module = "rome-utils") }
     implementation(libs.rome.modules)

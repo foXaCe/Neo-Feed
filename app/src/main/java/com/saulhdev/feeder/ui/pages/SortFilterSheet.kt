@@ -25,9 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.saulhdev.feeder.R
 import com.saulhdev.feeder.data.content.FeedPreferences
@@ -49,7 +49,7 @@ import org.koin.compose.koinInject
 
 @OptIn(
     ExperimentalCoroutinesApi::class,
-    ExperimentalLayoutApi::class
+    ExperimentalLayoutApi::class,
 )
 @Composable
 fun SortFilterSheet(
@@ -71,27 +71,30 @@ fun SortFilterSheet(
     var sortAscOption by remember(state.sortFilter.sortAsc) {
         mutableStateOf(state.sortFilter.sortAsc)
     }
-    val sourcesOption = remember(state.sortFilter.sourcesFilter) {
-        mutableStateListOf(*state.sortFilter.sourcesFilter.toTypedArray())
-    }
+    val sourcesOption =
+        remember(state.sortFilter.sourcesFilter) {
+            mutableStateListOf(*state.sortFilter.sourcesFilter.toTypedArray())
+        }
 
-    val tagsOption = remember(state.sortFilter.tagsFilter) {
-        mutableStateListOf(*state.sortFilter.tagsFilter.toTypedArray())
-    }
+    val tagsOption =
+        remember(state.sortFilter.tagsFilter) {
+            mutableStateListOf(*state.sortFilter.tagsFilter.toTypedArray())
+        }
 
     Scaffold(
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onBackground,
         bottomBar = {
             Column(
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier.padding(horizontal = 8.dp),
             ) {
                 HorizontalDivider(thickness = 2.dp)
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     OutlinedActionButton(
                         modifier = Modifier.weight(1f),
@@ -116,23 +119,23 @@ fun SortFilterSheet(
                             sourcesPrefVar = sourcesOption.toSet()
                             tagsPrefVar = tagsOption.toSet()
                             onDismiss()
-                        }
+                        },
                     )
                 }
             }
         },
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .padding(
-                    bottom = paddingValues.calculateBottomPadding(),
-                    start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
-                    end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
-                )
-                .nestedScroll(nestedScrollConnection)
-                .fillMaxSize(),
+            modifier =
+                Modifier
+                    .padding(
+                        bottom = paddingValues.calculateBottomPadding(),
+                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                    ).nestedScroll(nestedScrollConnection)
+                    .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(8.dp)
+            contentPadding = PaddingValues(8.dp),
         ) {
             item {
                 ExpandableItemsBlock(
@@ -161,7 +164,7 @@ fun SortFilterSheet(
                         firstSelected = sortAscOption,
                         onCheckedChange = { checked ->
                             sortAscOption = checked
-                        }
+                        },
                     )
                 }
             }
@@ -185,8 +188,11 @@ fun SortFilterSheet(
                                 text = it.title,
                                 checked = checked,
                             ) {
-                                if (checked) sourcesOption.add(it.id.toString())
-                                else sourcesOption.remove(it.id.toString())
+                                if (checked) {
+                                    sourcesOption.add(it.id.toString())
+                                } else {
+                                    sourcesOption.remove(it.id.toString())
+                                }
                             }
                         }
                     }
@@ -212,8 +218,11 @@ fun SortFilterSheet(
                                 text = it,
                                 checked = checked,
                             ) {
-                                if (checked) tagsOption.add(it)
-                                else tagsOption.remove(it)
+                                if (checked) {
+                                    tagsOption.add(it)
+                                } else {
+                                    tagsOption.remove(it)
+                                }
                             }
                         }
                     }

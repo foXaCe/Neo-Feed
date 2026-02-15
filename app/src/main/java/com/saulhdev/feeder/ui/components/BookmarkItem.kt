@@ -63,42 +63,52 @@ fun BookmarkItem(
         mutableStateOf(article.pinned)
     }
     val backgroundColor by animateColorAsState(
-        targetValue = if (isPinned) MaterialTheme.colorScheme.surfaceContainerHighest
-        else MaterialTheme.colorScheme.surfaceContainer,
-        label = "backgroundColor"
+        targetValue =
+            if (isPinned) {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            } else {
+                MaterialTheme.colorScheme.surfaceContainer
+            },
+        label = "backgroundColor",
     )
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = backgroundColor,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ),
         onClick = {
             onClickAction(article)
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .padding(8.dp),
+            modifier =
+                Modifier
+                    .padding(8.dp),
         ) {
-            if (article.imageUrl != null
-                && article.imageUrl!!.isNotEmpty()
-                && !article.imageUrl!!.contains(".rss")
+            val imageUrl = article.imageUrl
+            if (imageUrl != null &&
+                imageUrl.isNotEmpty() &&
+                !imageUrl.contains(".rss")
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(article.imageUrl)
-                        .crossfade(true)
-                        .crossfade(500)
-                        .build(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .clip(MaterialTheme.shapes.medium),
+                    model =
+                        ImageRequest
+                            .Builder(LocalContext.current)
+                            .data(article.imageUrl)
+                            .crossfade(true)
+                            .crossfade(500)
+                            .build(),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                            .clip(MaterialTheme.shapes.medium),
                     contentScale = ContentScale.Crop,
-                    contentDescription = ""
+                    contentDescription = null,
                 )
             }
 
@@ -111,29 +121,32 @@ fun BookmarkItem(
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
-                    modifier = Modifier
-                        .weight(2f)
+                    modifier =
+                        Modifier
+                            .weight(2f),
                 ) {
                     Text(
                         text = feed.title,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = RelativeTimeHelper.getDateFormattedRelative(
-                            LocalContext.current,
-                            (article.pubDate / 1000) - 1000
-                        ),
+                        text =
+                            RelativeTimeHelper.getDateFormattedRelative(
+                                LocalContext.current,
+                                (article.pubDate / 1000) - 1000,
+                            ),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 Row {
@@ -144,14 +157,15 @@ fun BookmarkItem(
                     Spacer(modifier = Modifier.size(8.dp))
 
                     ShareButton {
-                        val intent = Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                putExtra(Intent.EXTRA_TEXT, article.link)
-                                putExtra(Intent.EXTRA_TITLE, article.title)
-                                type = "text/plain"
-                            },
-                            null,
-                        )
+                        val intent =
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).apply {
+                                    putExtra(Intent.EXTRA_TEXT, article.link)
+                                    putExtra(Intent.EXTRA_TITLE, article.title)
+                                    type = "text/plain"
+                                },
+                                null,
+                            )
                         context.startActivity(intent)
                     }
                 }

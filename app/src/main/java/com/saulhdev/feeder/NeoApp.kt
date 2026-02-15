@@ -1,11 +1,11 @@
 package com.saulhdev.feeder
 
 import android.app.Activity
+import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
-import androidx.multidex.MultiDexApplication
 import androidx.work.WorkManager
 import com.google.android.material.color.DynamicColors
 import com.jakewharton.threetenabp.AndroidThreeTen
@@ -13,11 +13,11 @@ import com.saulhdev.feeder.data.content.FeedPreferences.Companion.prefsModule
 import com.saulhdev.feeder.data.db.NeoFeedDb
 import com.saulhdev.feeder.data.repository.ArticleRepository
 import com.saulhdev.feeder.data.repository.SourcesRepository
+import com.saulhdev.feeder.manager.service.OverlayBridge
+import com.saulhdev.feeder.manager.sync.SyncRestClient
+import com.saulhdev.feeder.utils.ApplicationCoroutineScope
 import com.saulhdev.feeder.utils.extensions.ToastMaker
 import com.saulhdev.feeder.utils.extensions.restartApp
-import com.saulhdev.feeder.manager.sync.SyncRestClient
-import com.saulhdev.feeder.manager.service.OverlayBridge
-import com.saulhdev.feeder.utils.ApplicationCoroutineScope
 import com.saulhdev.feeder.viewmodels.ArticleListViewModel
 import com.saulhdev.feeder.viewmodels.ArticleViewModel
 import com.saulhdev.feeder.viewmodels.SearchFeedViewModel
@@ -38,63 +38,71 @@ import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 
 @OptIn(KoinExperimentalAPI::class)
-class NeoApp : MultiDexApplication(), KoinStartup {
+class NeoApp :
+    Application(),
+    KoinStartup {
     val activityHandler = ActivityHandler()
     private val applicationCoroutineScope = ApplicationCoroutineScope()
     private val wm: WorkManager by inject(WorkManager::class.java)
 
     private fun savedStateHandle() = SavedStateHandle()
 
-    private val modelModule = module {
-        single {
-            savedStateHandle()
+    private val modelModule =
+        module {
+            single {
+                savedStateHandle()
+            }
+            viewModelOf(::SourceEditViewModel)
+            viewModelOf(::SearchFeedViewModel)
+            viewModelOf(::ArticleListViewModel)
+            viewModelOf(::SourceListViewModel)
+            viewModelOf(::ArticleViewModel)
+            viewModelOf(::SortFilterViewModel)
         }
-        viewModelOf(::SourceEditViewModel)
-        viewModelOf(::SearchFeedViewModel)
-        viewModelOf(::ArticleListViewModel)
-        viewModelOf(::SourceListViewModel)
-        viewModelOf(::ArticleViewModel)
-        viewModelOf(::SortFilterViewModel)
-    }
 
     // TODO Move to its class
-    private val dataModule = module {
-        single<NeoFeedDb> { NeoFeedDb.getInstance(this@NeoApp) }
-        single { get<NeoFeedDb>().feedArticleDao() }
-        single { get<NeoFeedDb>().feedSourceDao() }
-        singleOf(::ArticleRepository)
-        singleOf(::SourcesRepository)
-        singleOf(::SyncRestClient)
-    }
+    private val dataModule =
+        module {
+            single<NeoFeedDb> { NeoFeedDb.getInstance(this@NeoApp) }
+            single { get<NeoFeedDb>().feedArticleDao() }
+            single { get<NeoFeedDb>().feedSourceDao() }
+            singleOf(::ArticleRepository)
+            singleOf(::SourcesRepository)
+            singleOf(::SyncRestClient)
+        }
 
-    private val coreModule = module {
-        single { contentResolver }
-        single { WorkManager.getInstance(this@NeoApp) }
-        single<ToastMaker> {
-            object : ToastMaker {
-                override suspend fun makeToast(text: String) = withContext(Dispatchers.Main) {
-                    Toast.makeText(get(), text, Toast.LENGTH_SHORT).show()
-                }
+    private val coreModule =
+        module {
+            single { contentResolver }
+            single { WorkManager.getInstance(this@NeoApp) }
+            single<ToastMaker> {
+                object : ToastMaker {
+                    override suspend fun makeToast(text: String) =
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(get(), text, Toast.LENGTH_SHORT).show()
+                        }
 
-                override suspend fun makeToast(resId: Int) = withContext(Dispatchers.Main) {
-                    Toast.makeText(get(), resId, Toast.LENGTH_SHORT).show()
+                    override suspend fun makeToast(resId: Int) =
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(get(), resId, Toast.LENGTH_SHORT).show()
+                        }
                 }
             }
+            single { applicationCoroutineScope }
+            single<NeoApp> { this@NeoApp }
         }
-        single { applicationCoroutineScope }
-        single<NeoApp> { this@NeoApp }
-    }
 
     fun onAppStarted() {
         registerActivityLifecycleCallbacks(activityHandler)
     }
 
     @KoinExperimentalAPI
-    override fun onKoinStartup() = koinConfiguration {
-        androidLogger()
-        androidContext(this@NeoApp)
-        modules(coreModule, prefsModule, dataModule, modelModule)
-    }
+    override fun onKoinStartup() =
+        koinConfiguration {
+            androidLogger()
+            androidContext(this@NeoApp)
+            modules(coreModule, prefsModule, dataModule, modelModule)
+        }
 
     override fun onCreate() {
         super.onCreate()
@@ -103,9 +111,10 @@ class NeoApp : MultiDexApplication(), KoinStartup {
         AndroidThreeTen.init(this)
         DynamicColors.applyToActivitiesIfAvailable(
             this,
-            _root_ide_package_.com.google.android.material.color.DynamicColorsOptions.Builder()
+            _root_ide_package_.com.google.android.material.color.DynamicColorsOptions
+                .Builder()
                 .setPrecondition { _, _ -> DynamicColors.isDynamicColorAvailable() }
-                .build()
+                .build(),
         )
         wm.pruneWork()
         onAppStarted()
@@ -125,8 +134,6 @@ class NeoApp : MultiDexApplication(), KoinStartup {
     }
 
     companion object {
-        private const val TAG = "NeoFeed"
-
         @JvmStatic
         var instance: NeoApp? = null
             private set
@@ -154,18 +161,25 @@ class ActivityHandler : ActivityLifecycleCallbacks {
     }
 
     override fun onActivityDestroyed(activity: Activity) {
-        if (activity == foregroundActivity)
+        if (activity == foregroundActivity) {
             foregroundActivity = null
+        }
         activities.remove(activity)
     }
 
-    override fun onActivitySaveInstanceState(p0: Activity, p1: Bundle) {
+    override fun onActivitySaveInstanceState(
+        activity: Activity,
+        outState: Bundle,
+    ) {
     }
 
     override fun onActivityStopped(activity: Activity) {
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+    override fun onActivityCreated(
+        activity: Activity,
+        savedInstanceState: Bundle?,
+    ) {
         activities.add(activity)
     }
 }

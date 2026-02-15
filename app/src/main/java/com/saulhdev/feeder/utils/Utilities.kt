@@ -14,61 +14,75 @@ class Utilities {
     fun restartApp(context: Context) {
         val pm = context.packageManager
 
-        var intent: Intent? = Intent(Intent.ACTION_MAIN)
-        intent!!.addCategory(Intent.CATEGORY_HOME)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        var intent =
+            Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
         val componentName = intent.resolveActivity(pm)
-        if (context.packageName != componentName.packageName) {
-            intent = pm.getLaunchIntentForPackage(context.packageName)
-            intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        if (componentName != null && context.packageName != componentName.packageName) {
+            intent = pm
+                .getLaunchIntentForPackage(context.packageName)
+                ?.apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP) }
+                ?: intent
         }
 
         restartApp(context, intent)
     }
 
-    fun restartApp(context: Context, intent: Intent?) {
+    fun restartApp(
+        context: Context,
+        intent: Intent?,
+    ) {
         context.startActivity(intent)
 
         // Create a pending intent so the application is restarted after System.exit(0) was called.
         // We use an AlarmManager to call this intent in 100ms
-        val mPendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val mPendingIntent =
+            PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
         val mgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent)
-
 
         exitProcess(0)
     }
 
+    companion object {
+        @JvmStatic
+        fun isRtl(res: Resources): Boolean = res.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
 
-    companion object{
         @JvmStatic
-        fun isRtl(res: Resources): Boolean {
-            return res.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
-        }
+        fun boundToRange(
+            value: Float,
+            lowerBound: Float,
+            upperBound: Float,
+        ): Float = max(lowerBound, min(value, upperBound))
+
         @JvmStatic
-        fun boundToRange(value: Float, lowerBound: Float, upperBound: Float): Float {
-            return max(lowerBound, min(value, upperBound))
-        }
-        @JvmStatic
-        fun getDescendantCoordRelativeToAncestor(
-            descendant: View, ancestor: View, coord: FloatArray, includeRootScroll: Boolean
-        ): Float {
-            return getDescendantCoordRelativeToAncestor(
-                descendant, ancestor, coord, includeRootScroll,
-                false
-            )
-        }
         fun getDescendantCoordRelativeToAncestor(
             descendant: View,
             ancestor: View,
             coord: FloatArray,
             includeRootScroll: Boolean,
-            ignoreTransform: Boolean
+        ): Float =
+            getDescendantCoordRelativeToAncestor(
+                descendant,
+                ancestor,
+                coord,
+                includeRootScroll,
+                false,
+            )
+
+        fun getDescendantCoordRelativeToAncestor(
+            descendant: View,
+            ancestor: View,
+            coord: FloatArray,
+            includeRootScroll: Boolean,
+            ignoreTransform: Boolean,
         ): Float {
             var scale = 1.0f
             var v: View? = descendant
@@ -91,10 +105,13 @@ class Utilities {
             return scale
         }
 
-
-        fun offsetPoints(points: FloatArray, offsetX: Float, offsetY: Float) {
+        fun offsetPoints(
+            points: FloatArray,
+            offsetX: Float,
+            offsetY: Float,
+        ) {
             var i = 0
-            while (i < points.size) {
+            while (i + 1 < points.size) {
                 points[i] += offsetX
                 points[i + 1] += offsetY
                 i += 2

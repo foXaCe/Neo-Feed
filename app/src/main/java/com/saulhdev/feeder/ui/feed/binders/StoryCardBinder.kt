@@ -13,11 +13,11 @@ import com.saulhdev.feeder.data.content.FeedPreferences
 import com.saulhdev.feeder.data.db.models.FeedItem
 import com.saulhdev.feeder.data.repository.ArticleRepository
 import com.saulhdev.feeder.databinding.FeedCardStoryLargeBinding
-import com.saulhdev.feeder.utils.extensions.isDark
-import com.saulhdev.feeder.utils.extensions.launchView
 import com.saulhdev.feeder.ui.navigation.Routes
 import com.saulhdev.feeder.ui.theme.CardTheme
 import com.saulhdev.feeder.utils.RelativeTimeHelper
+import com.saulhdev.feeder.utils.extensions.isDark
+import com.saulhdev.feeder.utils.extensions.launchView
 import com.saulhdev.feeder.utils.openLinkInCustomTab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +26,11 @@ import org.koin.java.KoinJavaComponent.get
 import org.koin.java.KoinJavaComponent.inject
 
 object StoryCardBinder : FeedBinder {
-    override fun bind(theme: SparseIntArray?, item: FeedItem, view: View) {
+    override fun bind(
+        theme: SparseIntArray?,
+        item: FeedItem,
+        view: View,
+    ) {
         val context = view.context
         val content = item.toStoryCardContent()
         val binding = FeedCardStoryLargeBinding.bind(view)
@@ -38,7 +42,7 @@ object StoryCardBinder : FeedBinder {
         binding.storyDate.text =
             RelativeTimeHelper.getDateFormattedRelative(
                 view.context,
-                (item.timeMillis / 1000) - 1000
+                (item.timeMillis / 1000) - 1000,
             )
 
         if (content.text.isEmpty()) {
@@ -71,14 +75,15 @@ object StoryCardBinder : FeedBinder {
         }
 
         binding.shareButton.setOnClickListener {
-            val intent = Intent.createChooser(
-                Intent(Intent.ACTION_SEND).apply {
-                    putExtra(Intent.EXTRA_TEXT, content.link)
-                    putExtra(Intent.EXTRA_TITLE, content.title)
-                    type = "text/plain"
-                },
-                null,
-            )
+            val intent =
+                Intent.createChooser(
+                    Intent(Intent.ACTION_SEND).apply {
+                        putExtra(Intent.EXTRA_TEXT, content.link)
+                        putExtra(Intent.EXTRA_TITLE, content.title)
+                        type = "text/plain"
+                    },
+                    null,
+                )
             context.startActivity(intent)
         }
 
@@ -86,32 +91,16 @@ object StoryCardBinder : FeedBinder {
             if (prefs.openInBrowser.getValue()) {
                 view.context.launchView(content.link)
             } else {
-                val scope = CoroutineScope(Dispatchers.Main)
-
-                scope.launch {
+                CoroutineScope(Dispatchers.Main).launch {
                     if (prefs.offlineReader.getValue()) {
                         view.context.startActivity(
                             MainActivity.navigateIntent(
                                 view.context,
-                                "${Routes.ARTICLE_VIEW}/${item.id}"
-                            )
+                                "${Routes.ARTICLE_VIEW}/${item.id}",
+                            ),
                         )
                     } else {
-                        scope.launch {
-                            if (prefs.offlineReader.getValue()) {
-                                view.context.startActivity(
-                                    MainActivity.navigateIntent(
-                                        context,
-                                        "${Routes.ARTICLE_VIEW}/${item.id}"
-                                    )
-                                )
-                            } else {
-                                openLinkInCustomTab(
-                                    context,
-                                    content.link
-                                )
-                            }
-                        }
+                        openLinkInCustomTab(context, content.link)
                     }
                 }
             }
@@ -119,10 +108,12 @@ object StoryCardBinder : FeedBinder {
 
         theme ?: return
         binding.cardStory.setCardBackgroundColor(ColorStateList.valueOf(theme.get(CardTheme.Colors.CARD_BG.ordinal)))
-        val themeCard = if (theme.get(CardTheme.Colors.CARD_BG.ordinal).isDark())
-            CardTheme.defaultDarkThemeColors
-        else
-            CardTheme.defaultLightThemeColors
+        val themeCard =
+            if (theme.get(CardTheme.Colors.CARD_BG.ordinal).isDark()) {
+                CardTheme.defaultDarkThemeColors
+            } else {
+                CardTheme.defaultLightThemeColors
+            }
         binding.storyTitle.setTextColor(themeCard.get(CardTheme.Colors.TEXT_COLOR_PRIMARY.ordinal))
         binding.storySource.setTextColor(themeCard.get(CardTheme.Colors.TEXT_COLOR_SECONDARY.ordinal))
         binding.storyDate.setTextColor(themeCard.get(CardTheme.Colors.TEXT_COLOR_SECONDARY.ordinal))
@@ -133,7 +124,10 @@ object StoryCardBinder : FeedBinder {
             ColorStateList.valueOf(themeCard.get(CardTheme.Colors.TEXT_COLOR_PRIMARY.ordinal))
     }
 
-    private fun updateSaveIcon(button: MaterialButton, bookmarked: Boolean) {
+    private fun updateSaveIcon(
+        button: MaterialButton,
+        bookmarked: Boolean,
+    ) {
         if (bookmarked) {
             button.setIconResource(R.drawable.ic_heart_fill)
         } else {

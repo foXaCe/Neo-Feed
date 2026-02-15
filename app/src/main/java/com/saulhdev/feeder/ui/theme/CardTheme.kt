@@ -26,9 +26,9 @@ import com.saulhdev.feeder.NeoApp
 import com.saulhdev.feeder.R
 
 object CardTheme {
-    val defaultLightThemeColors = createLightTheme()
-    val defaultDarkThemeColors = createDarkTheme()
-    val defaultBlackThemeColors = createBlackTheme()
+    val defaultLightThemeColors by lazy { createLightTheme() }
+    val defaultDarkThemeColors by lazy { createDarkTheme() }
+    val defaultBlackThemeColors by lazy { createBlackTheme() }
 
     private fun createLightTheme(): SparseIntArray =
         SparseIntArray().apply {

@@ -50,118 +50,126 @@ import kotlin.time.Instant
             entity = Feed::class,
             parentColumns = ["id"],
             childColumns = ["feedId"],
-            onDelete = CASCADE
-        )
+            onDelete = CASCADE,
+        ),
     ],
 )
-data class Article @OptIn(ExperimentalTime::class) constructor(
-    @PrimaryKey
-    val uuid: String = "",
-    val guid: String = "",
-    val title: String = "",
-    val plainTitle: String = "",
-    val imageUrl: String? = null,
-    val enclosureLink: String? = null,
-    val plainSnippet: String = "",
-    val description: String = "",
-    val author: String? = "",
-    @ColumnInfo(name = "pubDateV2", defaultValue = "0")
-    val pubDate: Long = 0L,
-    val link: String? = "",
-    val feedId: Long = 0,
-    @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
-    val firstSyncedTime: Instant = Clock.System.now(),
-    @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
-    val primarySortTime: Instant = Clock.System.now(),
-    val categories: ArrayList<String> = arrayListOf(),
-    val pinned: Boolean = false,
-    val bookmarked: Boolean = false,
-) {
-    fun updateFromParsedEntry(
-        entry: Item,
-        entryGuid: String,
-        feed: JsonFeed,
-        feedId: Long,
-    ): Article {
-        val converter = HtmlToPlainTextConverter()
-        // Be careful about nulls.
-        val text = entry.content_html ?: entry.content_text ?: ""
-        val summary: String = (
-                entry.summary ?: entry.content_text
-                ?: converter.convert(text)
+data class Article
+    @OptIn(ExperimentalTime::class)
+    constructor(
+        @PrimaryKey
+        val uuid: String = "",
+        val guid: String = "",
+        val title: String = "",
+        val plainTitle: String = "",
+        val imageUrl: String? = null,
+        val enclosureLink: String? = null,
+        val plainSnippet: String = "",
+        val description: String = "",
+        val author: String? = "",
+        @ColumnInfo(name = "pubDateV2", defaultValue = "0")
+        val pubDate: Long = 0L,
+        val link: String? = "",
+        val feedId: Long = 0,
+        @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
+        val firstSyncedTime: Instant = Clock.System.now(),
+        @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
+        val primarySortTime: Instant = Clock.System.now(),
+        val categories: ArrayList<String> = arrayListOf(),
+        val pinned: Boolean = false,
+        val bookmarked: Boolean = false,
+    ) {
+        fun updateFromParsedEntry(
+            entry: Item,
+            entryGuid: String,
+            feed: JsonFeed,
+            feedId: Long,
+        ): Article {
+            val converter = HtmlToPlainTextConverter()
+            // Be careful about nulls.
+            val text = entry.content_html ?: entry.content_text ?: ""
+            val summary: String =
+                (
+                    entry.summary ?: entry.content_text
+                        ?: converter.convert(text)
                 ).take(200)
 
-        // Make double sure no base64 images are used as thumbnails
-        val safeImage = when {
-            entry.image?.startsWith("data") == true
-                 -> null
+            // Make double sure no base64 images are used as thumbnails
+            val safeImage =
+                when {
+                    entry.image?.startsWith("data") == true
+                    -> null
 
-            else -> entry.image
+                    else -> entry.image
+                }
+
+            val absoluteImage =
+                when {
+                    feed.feed_url != null && safeImage != null
+                    -> relativeLinkIntoAbsolute(sloppyLinkToStrictURL(feed.feed_url), safeImage)
+
+                    else -> safeImage
+                }
+
+            val plainTitle = entry.title?.take(200) ?: this.plainTitle
+            return copy(
+                guid = entryGuid,
+                plainTitle = plainTitle,
+                title = plainTitle,
+                plainSnippet = summary,
+                imageUrl = absoluteImage,
+                enclosureLink = entry.attachments?.firstOrNull()?.url,
+                author = entry.author?.name ?: feed.author?.name,
+                link = entry.url,
+                pubDate =
+                    try {
+                        // Allow an actual pubdate to be updated
+                        Instant
+                            .parse(entry.date_published?.substringBefore('[') ?: "")
+                            .toEpochMilliseconds()
+                    } catch (_: Throwable) {
+                        // If a pubDate is missing, then don't update if one is already set
+                        this.pubDate.takeIf { it > 0L }
+                            ?: Clock.System.now().toEpochMilliseconds()
+                    },
+                primarySortTime =
+                    minOf(
+                        firstSyncedTime,
+                        Instant.fromEpochMilliseconds(pubDate),
+                    ),
+                feedId = feedId,
+            )
         }
 
-        val absoluteImage = when {
-            feed.feed_url != null && safeImage != null
-                 -> relativeLinkIntoAbsolute(sloppyLinkToStrictURL(feed.feed_url), safeImage)
+        val enclosureFilename: String?
+            get() {
+                enclosureLink?.let { enclosureLink ->
+                    var fname: String? = null
+                    try {
+                        fname = URI(enclosureLink).path.split("/").last()
+                    } catch (_: Exception) {
+                    }
+                    return if (fname.isNullOrEmpty()) {
+                        null
+                    } else {
+                        fname
+                    }
+                }
+                return null
+            }
 
-            else -> safeImage
-        }
-
-        val plainTitle = entry.title?.take(200) ?: this.plainTitle
-        return copy(
-            guid = entryGuid,
-            plainTitle = plainTitle,
-            title = plainTitle,
-            plainSnippet = summary,
-            imageUrl = absoluteImage,
-            enclosureLink = entry.attachments?.firstOrNull()?.url,
-            author = entry.author?.name ?: feed.author?.name,
-            link = entry.url,
-            pubDate = try {
-                // Allow an actual pubdate to be updated
-                Instant.parse(entry.date_published?.substringBefore('[') ?: "")
-                    .toEpochMilliseconds()
-            } catch (_: Throwable) {
-                // If a pubDate is missing, then don't update if one is already set
-                this.pubDate.takeIf { it > 0L }
-                    ?: Clock.System.now().toEpochMilliseconds()
-            },
-            primarySortTime = minOf(
-                firstSyncedTime,
-                Instant.fromEpochMilliseconds(pubDate) ?: firstSyncedTime
-            ),
-            feedId = feedId,
-        )
+        val domain: String?
+            get() {
+                val l: String? = enclosureLink ?: link
+                if (l != null) {
+                    try {
+                        return URL(l).host.replace("www.", "")
+                    } catch (_: Throwable) {
+                    }
+                }
+                return null
+            }
     }
-
-    val enclosureFilename: String?
-        get() {
-            enclosureLink?.let { enclosureLink ->
-                var fname: String? = null
-                try {
-                    fname = URI(enclosureLink).path.split("/").last()
-                } catch (_: Exception) {
-                }
-                return if (fname.isNullOrEmpty()) {
-                    null
-                } else {
-                    fname
-                }
-            }
-            return null
-        }
-
-    val domain: String?
-        get() {
-            val l: String? = enclosureLink ?: link
-            if (l != null) {
-                try {
-                    return URL(l).host.replace("www.", "")
-                } catch (_: Throwable) {
-                }
-            }
-            return null
-        }
-}
 
 @DatabaseView(
     """
@@ -169,9 +177,9 @@ data class Article @OptIn(ExperimentalTime::class) constructor(
     FROM Article
     JOIN feeds f ON Article.feedId = f.id
     WHERE f.fulltextByDefault = 1 OR Article.bookmarked = 1
-"""
+""",
 )
 data class ArticleIdWithLink(
     val uuid: String,
-    val link: String
+    val link: String,
 )

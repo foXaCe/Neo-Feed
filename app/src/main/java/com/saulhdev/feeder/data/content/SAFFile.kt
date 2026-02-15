@@ -11,37 +11,28 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 // Source: Neo Store
-class SAFFile(context: Context, val uri: Uri) {
-
+class SAFFile(
+    context: Context,
+    val uri: Uri,
+) {
     private val mContext: Context = context
 
-    fun read(): String? {
+    fun read(): String? =
         try {
-            val pfd = mContext.contentResolver.openFileDescriptor(uri, "r")
-            val inStream = FileInputStream(pfd?.fileDescriptor).buffered()
-
-            return try {
-                inStream.reader().readText()
-            } catch (t: Throwable) {
-                Log.e(TAG, "Failed to read $uri", t)
-                null
-            } finally {
-                inStream.close()
-                pfd?.close()
+            mContext.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                FileInputStream(pfd.fileDescriptor).bufferedReader().use { it.readText() }
             }
         } catch (t: Throwable) {
             Log.e(TAG, "Failed to read $uri", t)
-            return null
+            null
         }
-    }
 
-    fun delete(): Boolean {
-        return try {
+    fun delete(): Boolean =
+        try {
             mContext.contentResolver.delete(uri, null, null) != 0
         } catch (e: UnsupportedOperationException) {
             DocumentFile.fromSingleUri(mContext, uri)?.delete() ?: false
         }
-    }
 
     fun share(context: Context) {
         val shareTitle = context.getString(R.string.share)
@@ -63,23 +54,22 @@ class SAFFile(context: Context, val uri: Uri) {
         val BOOKMARKS_MIME_ARRAY = arrayOf(BOOKMARKS_MIME_TYPE, MAIN_MIME_TYPE)
 
         @SuppressLint("MissingPermission")
-        fun write(context: Context, location: Uri, content: String): Boolean {
-            val pfd = context.contentResolver.openFileDescriptor(location, "w")
-            val outStream = FileOutputStream(pfd?.fileDescriptor).buffered()
-            val writer = outStream.bufferedWriter()
-
-            return try {
-                writer.write(content)
-                Log.e(TAG, "Success to create backup")
+        fun write(
+            context: Context,
+            location: Uri,
+            content: String,
+        ): Boolean =
+            try {
+                context.contentResolver.openFileDescriptor(location, "w")?.use { pfd ->
+                    FileOutputStream(pfd.fileDescriptor).bufferedWriter().use { writer ->
+                        writer.write(content)
+                    }
+                }
+                Log.d(TAG, "Success to create backup")
                 true
             } catch (t: Throwable) {
                 Log.e(TAG, "Failed to create backup", t)
                 false
-            } finally {
-                writer.close()
-                outStream.close()
-                pfd?.close()
             }
-        }
     }
 }
