@@ -34,106 +34,119 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.Locale
 
-fun getThemes(context: Context): Map<String, String> {
-    return mapOf(
+fun getThemes(context: Context): Map<String, String> =
+    mapOf(
         "auto_system" to context.resources.getString(R.string.theme_auto_system),
         "auto_system_black" to context.resources.getString(R.string.theme_auto_system_black),
         "light" to context.resources.getString(R.string.theme_light),
         "dark" to context.resources.getString(R.string.theme_dark),
         "black" to context.resources.getString(R.string.theme_black),
     )
-}
 
-fun getSortingOptions(context: Context): Map<String, String> {
-    return mapOf(
+fun getSortingOptions(context: Context): Map<String, String> =
+    mapOf(
         SORT_CHRONOLOGICAL to context.resources.getString(R.string.sorting_chronological),
         SORT_TITLE to context.resources.getString(R.string.sorting_title),
         SORT_SOURCE to context.resources.getString(R.string.sorting_source),
     )
-}
 
-fun getSyncFrequency(context: Context): Map<String, String> {
-    return mapOf(
+fun getSyncFrequency(context: Context): Map<String, String> =
+    mapOf(
         "0.5" to context.resources.getString(R.string.sync_half_hour_minutes),
         "1" to context.resources.getString(R.string.sync_one_hour),
         "2" to context.resources.getString(R.string.sync_two_hours),
         "3" to context.resources.getString(R.string.sync_three_hours),
-        "6" to context.resources.getString(R.string.sync_six_hours)
+        "6" to context.resources.getString(R.string.sync_six_hours),
     )
-}
 
-fun getItemsPerFeed(): Map<String, String> {
-    return mapOf(
+fun getItemsPerFeed(): Map<String, String> =
+    mapOf(
+        "1" to "1",
+        "3" to "3",
+        "5" to "5",
+        "10" to "10",
         "25" to "25",
         "50" to "50",
         "100" to "100",
         "200" to "200",
-        "500" to "500"
+        "500" to "500",
     )
-}
 
-fun getBackgroundOptions(context: Context): Map<String, String> {
-    return mapOf(
+fun getBackgroundOptions(context: Context): Map<String, String> =
+    mapOf(
         "theme" to context.resources.getString(R.string.background_theme_option),
         "light" to context.resources.getString(R.string.theme_light),
-        "dark" to context.resources.getString(R.string.theme_dark)
+        "dark" to context.resources.getString(R.string.theme_dark),
     )
-}
 
 /**
  * Ensures a url is valid, having a scheme and everything. It turns 'google.com' into 'http://google.com' for example.
  */
-fun sloppyLinkToStrictURL(url: String): URL = try {
-    // If no exception, it's valid
-    URL(url)
-} catch (_: MalformedURLException) {
-    URL("http://$url")
-}
+fun sloppyLinkToStrictURL(url: String): URL =
+    try {
+        // If no exception, it's valid
+        URL(url)
+    } catch (_: MalformedURLException) {
+        URL("http://$url")
+    }
 
 /**
  * Returns a URL but does not guarantee that it accurately represents the input string if the input string is an invalid URL.
  * This is used to ensure that migrations to versions where Feeds have URL and not strings don't crash.
  */
-fun sloppyLinkToStrictURLNoThrows(url: String): URL = try {
-    sloppyLinkToStrictURL(url)
-} catch (_: MalformedURLException) {
-    sloppyLinkToStrictURL("")
-}
-
-/**
- * On error, this method simply returns the original link. It does *not* throw exceptions.
- */
-fun relativeLinkIntoAbsoluteOrNull(base: URL, link: String?): String? = try {
-    // If no exception, it's valid
-    if (link != null) {
-        relativeLinkIntoAbsoluteOrThrow(base, link).toString()
-    } else {
-        null
+fun sloppyLinkToStrictURLNoThrows(url: String): URL =
+    try {
+        sloppyLinkToStrictURL(url)
+    } catch (_: MalformedURLException) {
+        sloppyLinkToStrictURL("")
     }
-} catch (_: MalformedURLException) {
-    link
-}
 
 /**
  * On error, this method simply returns the original link. It does *not* throw exceptions.
  */
-fun relativeLinkIntoAbsolute(base: URL, link: String): String = try {
-    // If no exception, it's valid
-    relativeLinkIntoAbsoluteOrThrow(base, link).toString()
-} catch (_: MalformedURLException) {
-    link
-}
+fun relativeLinkIntoAbsoluteOrNull(
+    base: URL,
+    link: String?,
+): String? =
+    try {
+        // If no exception, it's valid
+        if (link != null) {
+            relativeLinkIntoAbsoluteOrThrow(base, link).toString()
+        } else {
+            null
+        }
+    } catch (_: MalformedURLException) {
+        link
+    }
+
+/**
+ * On error, this method simply returns the original link. It does *not* throw exceptions.
+ */
+fun relativeLinkIntoAbsolute(
+    base: URL,
+    link: String,
+): String =
+    try {
+        // If no exception, it's valid
+        relativeLinkIntoAbsoluteOrThrow(base, link).toString()
+    } catch (_: MalformedURLException) {
+        link
+    }
 
 /**
  * On error, throws MalformedURLException.
  */
 @Throws(MalformedURLException::class)
-fun relativeLinkIntoAbsoluteOrThrow(base: URL, link: String): URL = try {
-    // If no exception, it's valid
-    URL(link)
-} catch (_: MalformedURLException) {
-    URL(base, link)
-}
+fun relativeLinkIntoAbsoluteOrThrow(
+    base: URL,
+    link: String,
+): URL =
+    try {
+        // If no exception, it's valid
+        URL(link)
+    } catch (_: MalformedURLException) {
+        URL(base, link)
+    }
 
 private val regexImgSrc = """img.*?src=(["'])((?!data).*?)\1""".toRegex(RegexOption.DOT_MATCHES_ALL)
 
@@ -149,25 +162,25 @@ fun naiveFindImageLink(text: String?): String? =
         null
     }
 
-fun String.urlEncode(): String =
-    URLEncoder.encode(this, "UTF-8")
+fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 
-fun String.urlDecode(): String =
-    URLDecoder.decode(this, "UTF-8")
+fun String.urlDecode(): String = URLDecoder.decode(this, "UTF-8")
 
-fun Context.unicodeWrap(text: String): String =
-    BidiFormatter.getInstance(getLocale()).unicodeWrap(text)
+fun Context.unicodeWrap(text: String): String = BidiFormatter.getInstance(getLocale()).unicodeWrap(text)
 
-fun Context.getLocale(): Locale =
-    resources.configuration.locales[0]
+fun Context.getLocale(): Locale = resources.configuration.locales[0]
 
-val FILE_DATETIME_FORMAT = LocalDateTime.Format {
-    date(LocalDate.Formats.ISO);
-    char('T'); hour(); char('_'); minute(); char('_'); second()
-}
+val FILE_DATETIME_FORMAT =
+    LocalDateTime.Format {
+        date(LocalDate.Formats.ISO)
+        char('T')
+        hour()
+        char('_')
+        minute()
+        char('_')
+        second()
+    }
 
 object Android {
-    fun sdk(sdk: Int): Boolean {
-        return Build.VERSION.SDK_INT >= sdk
-    }
+    fun sdk(sdk: Int): Boolean = Build.VERSION.SDK_INT >= sdk
 }
