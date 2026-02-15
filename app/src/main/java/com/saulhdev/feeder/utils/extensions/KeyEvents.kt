@@ -33,5 +33,3 @@ fun Modifier.interceptKey(key: Key, onKeyEvent: () -> Unit): Modifier {
         } else it.key == key // only pass the key event to children if it's not the chosen key
     }
 }
-
-

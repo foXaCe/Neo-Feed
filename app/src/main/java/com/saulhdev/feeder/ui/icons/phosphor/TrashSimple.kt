@@ -77,4 +77,3 @@ val Phosphor.TrashSimple: ImageVector
     }
 
 private var _trash_simple: ImageVector? = null
-

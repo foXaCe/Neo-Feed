@@ -22,10 +22,10 @@ $text =~ s/ \z//;
 
 # HTML block elements and "br". joined with '|'
 my $blockElements = join "|", qw(
-    address article aside blockquote canvas dd div dl dt 
-    fieldset figcaption figure footer form 
-    h1 h2 h3 h4 h5 h6 header hr li 
-    main nav noscript ol p pre section table tfoot ul video 
+    address article aside blockquote canvas dd div dl dt
+    fieldset figcaption figure footer form
+    h1 h2 h3 h4 h5 h6 header hr li
+    main nav noscript ol p pre section table tfoot ul video
     br
 );
 

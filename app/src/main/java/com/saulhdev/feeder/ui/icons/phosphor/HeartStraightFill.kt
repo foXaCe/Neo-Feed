@@ -65,4 +65,3 @@ public val Phosphor.HeartStraightFill: ImageVector
     }
 
 private var _heart_straight_fill: ImageVector? = null
-

@@ -68,4 +68,3 @@ val Phosphor.Plus: ImageVector
     }
 
 private var _plus: ImageVector? = null
-

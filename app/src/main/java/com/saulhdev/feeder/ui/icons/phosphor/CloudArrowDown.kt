@@ -83,4 +83,3 @@ val Phosphor.CloudArrowDown: ImageVector
     }
 
 private var _cloud_arrow_down: ImageVector? = null
-

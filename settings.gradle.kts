@@ -25,4 +25,3 @@ project(":google-gsa").projectDir = File(rootDir, "google-gsa")
 
 rootProject.name = "Neo Feed"
 include(":app")
- 

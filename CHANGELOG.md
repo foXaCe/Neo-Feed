@@ -23,7 +23,7 @@ CHANGELOG
 - Remove: Double permission declaration in manifest (credits @thePrivacyFanatic)
 - Remove: Unused aidl files
 
-### UI/UX 
+### UI/UX
 
 - Add: Permission dialog to enable draw over other apps (should fix usage on Lawnchair - credits @thePrivacyFanatic)
 - Add: Bookmark button to article page
@@ -32,7 +32,7 @@ CHANGELOG
 - Add: Option to disable dynamic color
 - Add: Option to see bookmarks in xml views
 - Add: Tags filter
-- Update: Revamp sort/filter sheet layout 
+- Update: Revamp sort/filter sheet layout
 - Update: Separate enabled/disabled sources list
 - Update: Replace source item's delete button with an enabling switch
 - Update: Revamp button and chip layouts

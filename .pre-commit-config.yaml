@@ -1,3 +1,10 @@
+ci:
+  autoupdate_schedule: weekly
+  autoupdate_commit_msg: "build: pre-commit autoupdate"
+  autofix_commit_msg: "style: pre-commit auto-fix"
+  autofix_prs: true
+  skip: [pretty-format-kotlin, remove-co-authored-by]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

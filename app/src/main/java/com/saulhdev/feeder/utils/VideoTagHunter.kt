@@ -32,4 +32,3 @@ data class Video(
     val height: Int
         get() = 360
 }
-

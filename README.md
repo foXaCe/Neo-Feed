@@ -58,7 +58,7 @@ You can join either our [Telegram](https://t.me/neo_launcher) or [Matrix](https:
 <a href="https://matrix.to/#/#neo-launcher:matrix.org"><img src="https://docs.cloudron.io/img/element-logo.png" alt="Join Matrix Channel" width="11%" align="center" /></a>
 </p>
 
-## Translation :left_speech_bubble: 
+## Translation :left_speech_bubble:
 [<img align="right" src="https://hosted.weblate.org/widgets/neo-feed/-/287x66-white.png" alt="Translation stats" width="40%" />](https://hosted.weblate.org/engage/neo-feed/?utm_source=widget)
 
 Contribute your translations to Neo Feed on [Hosted Weblate](https://hosted.weblate.org/engage/neo-feed/). <br> Adding new languages is always accepted and supported.

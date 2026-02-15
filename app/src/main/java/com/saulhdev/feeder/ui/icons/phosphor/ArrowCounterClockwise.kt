@@ -95,4 +95,3 @@ val Phosphor.ArrowCounterClockwise: ImageVector
     }
 
 private var _arrowCounterClockwise: ImageVector? = null
-

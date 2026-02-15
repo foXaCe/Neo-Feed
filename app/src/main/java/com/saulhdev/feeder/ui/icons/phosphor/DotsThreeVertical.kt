@@ -65,4 +65,3 @@ val Phosphor.DotsThreeVertical: ImageVector
     }
 
 private var _dotsThreeVertical: ImageVector? = null
-
