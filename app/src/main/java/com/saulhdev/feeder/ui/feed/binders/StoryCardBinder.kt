@@ -88,22 +88,7 @@ object StoryCardBinder : FeedBinder {
         }
 
         binding.root.setOnClickListener {
-            if (prefs.openInBrowser.getValue()) {
-                view.context.launchView(content.link)
-            } else {
-                CoroutineScope(Dispatchers.Main).launch {
-                    if (prefs.offlineReader.getValue()) {
-                        view.context.startActivity(
-                            MainActivity.navigateIntent(
-                                view.context,
-                                "${Routes.ARTICLE_VIEW}/${item.id}",
-                            ),
-                        )
-                    } else {
-                        openLinkInCustomTab(context, content.link)
-                    }
-                }
-            }
+            openLinkInCustomTab(context, content.link)
         }
 
         theme ?: return

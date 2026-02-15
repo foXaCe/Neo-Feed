@@ -1,38 +1,25 @@
 package com.saulhdev.feeder.manager.service
 
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.libraries.gsa.d.a.OverlayController
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.saulhdev.feeder.MainActivity
 import com.saulhdev.feeder.NeoApp
 import com.saulhdev.feeder.R
 import com.saulhdev.feeder.data.content.FeedPreferences
-import com.saulhdev.feeder.data.entity.MenuItem
 import com.saulhdev.feeder.manager.sync.SyncRestClient
 import com.saulhdev.feeder.ui.feed.FeedAdapter
-import com.saulhdev.feeder.ui.navigation.Routes
 import com.saulhdev.feeder.ui.theme.CardTheme
 import com.saulhdev.feeder.ui.theme.OverlayThemeHolder
 import com.saulhdev.feeder.ui.views.AbstractFloatingView
-import com.saulhdev.feeder.ui.views.DialogMenu
-import com.saulhdev.feeder.ui.views.FilterBottomSheet
-import com.saulhdev.feeder.utils.Android
-import com.saulhdev.feeder.utils.LinearLayoutManagerWrapper
 import com.saulhdev.feeder.utils.extensions.isDark
 import com.saulhdev.feeder.utils.extensions.setCustomTheme
 import com.saulhdev.feeder.viewmodels.ArticleListViewModel
@@ -57,8 +44,6 @@ class OverlayView(
     private val articles: SyncRestClient by inject(SyncRestClient::class.java)
     val prefs: FeedPreferences by inject()
 
-    var bookmarkVisible = false
-
     private lateinit var rootView: View
     private lateinit var adapter: FeedAdapter
 
@@ -82,7 +67,6 @@ class OverlayView(
         getWindow().setBackgroundDrawable(ColorDrawable(color))
 
         initRecyclerView()
-        initHeader()
         refreshNotifications()
 
         syncScope.launch {
@@ -140,39 +124,6 @@ class OverlayView(
     }
 
     private fun updateStubUi() {
-        val theme =
-            if (themeHolder.currentTheme
-                    .get(CardTheme.Colors.OVERLAY_BG.ordinal)
-                    .isDark()
-            ) {
-                CardTheme.defaultDarkThemeColors
-            } else {
-                CardTheme.defaultLightThemeColors
-            }
-        rootView.findViewById<MaterialButton>(R.id.header_settings).iconTint =
-            ColorStateList.valueOf(
-                theme.get(
-                    CardTheme.Colors.TEXT_COLOR_PRIMARY.ordinal,
-                ),
-            )
-
-        rootView.findViewById<MaterialButton>(R.id.header_filter).iconTint =
-            ColorStateList.valueOf(
-                theme.get(
-                    CardTheme.Colors.TEXT_COLOR_PRIMARY.ordinal,
-                ),
-            )
-
-        rootView.findViewById<MaterialButton>(R.id.header_bookmark).iconTint =
-            ColorStateList.valueOf(
-                theme.get(
-                    CardTheme.Colors.TEXT_COLOR_PRIMARY.ordinal,
-                ),
-            )
-
-        rootView
-            .findViewById<TextView>(R.id.header_title)
-            .setTextColor(theme.get(CardTheme.Colors.TEXT_COLOR_PRIMARY.ordinal))
     }
 
     private fun initRecyclerView() {
@@ -186,14 +137,24 @@ class OverlayView(
                 }
             }
 
-        rootView.findViewById<SwipeRefreshLayout>(R.id.swipe_to_refresh).setOnRefreshListener {
+        val swipeRefresh = rootView.findViewById<SwipeRefreshLayout>(R.id.swipe_to_refresh)
+        val isDark = themeHolder.currentTheme.get(CardTheme.Colors.OVERLAY_BG.ordinal).isDark()
+        if (isDark) {
+            swipeRefresh.setColorSchemeColors(android.graphics.Color.WHITE)
+            swipeRefresh.setProgressBackgroundColorSchemeColor(0xFF333333.toInt())
+        }
+        swipeRefresh.setOnRefreshListener {
             rootView.findViewById<RecyclerView>(R.id.recycler).recycledViewPool.clear()
             refreshNotifications()
         }
 
         adapter = FeedAdapter()
+        val screenWidthDp =
+            context.resources.displayMetrics.widthPixels /
+                context.resources.displayMetrics.density
+        val spanCount = (screenWidthDp / 360).toInt().coerceAtLeast(1)
         recyclerView.apply {
-            layoutManager = LinearLayoutManagerWrapper(context, LinearLayoutManager.VERTICAL, false)
+            layoutManager = StaggeredGridLayoutManager(spanCount, StaggeredGridLayoutManager.VERTICAL)
             adapter = this@OverlayView.adapter
         }
 
@@ -205,141 +166,17 @@ class OverlayView(
                     dy: Int,
                 ) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if ((recyclerView.layoutManager as LinearLayoutManager)
-                            .findFirstCompletelyVisibleItemPosition() < 5
-                    ) {
+                    val layoutManager = recyclerView.layoutManager as StaggeredGridLayoutManager
+                    val firstPositions = layoutManager.findFirstCompletelyVisibleItemPositions(null)
+                    val firstVisible = firstPositions.minOrNull() ?: 0
+                    if (firstVisible < 5) {
                         buttonReturnToTop.visibility = View.GONE
-                    } else if ((recyclerView.layoutManager as LinearLayoutManager)
-                            .findFirstCompletelyVisibleItemPosition() > 5
-                    ) {
+                    } else if (firstVisible > 5) {
                         buttonReturnToTop.visibility = View.VISIBLE
                     }
                 }
             },
         )
-    }
-
-    private fun updateToggleColor(
-        button: MaterialButton,
-        isChecked: Boolean,
-    ) {
-        val context = button.context
-        val darkTheme = themeHolder.currentTheme.get(CardTheme.Colors.OVERLAY_BG.ordinal).isDark()
-        val a14 = Android.sdk(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-        val a12 = Android.sdk(Build.VERSION_CODES.S)
-        val backgroundTint =
-            when {
-                !isChecked -> {
-                    Color.TRANSPARENT
-                }
-
-                a14 && darkTheme -> {
-                    ContextCompat.getColor(
-                        context,
-                        android.R.color.system_on_primary_container_dark,
-                    )
-                }
-
-                a14 -> {
-                    ContextCompat.getColor(
-                        context,
-                        android.R.color.system_primary_container_light,
-                    )
-                }
-
-                a12 -> {
-                    ContextCompat.getColor(
-                        context,
-                        android.R.color.system_accent1_400,
-                    )
-                }
-
-                else -> {
-                    ContextCompat.getColor(
-                        context,
-                        R.color.md_theme_primary,
-                    )
-                }
-            }
-        button.backgroundTintList = ColorStateList.valueOf(backgroundTint)
-    }
-
-    private var bookmarkCollectionJob: kotlinx.coroutines.Job? = null
-
-    private fun initHeader() {
-        val toggleButton = rootView.findViewById<MaterialButton>(R.id.header_bookmark)
-
-        updateToggleColor(toggleButton, bookmarkVisible)
-        toggleButton.setOnClickListener {
-            bookmarkCollectionJob?.cancel()
-            if (bookmarkVisible) {
-                bookmarkVisible = false
-                toggleButton.isChecked = bookmarkVisible
-                updateToggleColor(toggleButton, bookmarkVisible)
-                bookmarkCollectionJob =
-                    mainScope.launch {
-                        viewModel.articleListState.collect {
-                            adapter.replace(it.articles)
-                        }
-                    }
-            } else {
-                bookmarkVisible = true
-                toggleButton.isChecked = bookmarkVisible
-                updateToggleColor(toggleButton, bookmarkVisible)
-                bookmarkCollectionJob =
-                    mainScope.launch {
-                        viewModel.bookmarksState.collect {
-                            adapter.replace(it.bookmarkedArticles)
-                        }
-                    }
-            }
-        }
-
-        rootView.findViewById<MaterialButton>(R.id.header_filter).apply {
-            setOnClickListener {
-                if (AbstractFloatingView.isAnyOpen()) {
-                    AbstractFloatingView.closeAllOpenViews(context)
-                    return@setOnClickListener
-                } else {
-                    FilterBottomSheet.show(context, true)
-                }
-            }
-        }
-
-        rootView.findViewById<MaterialButton>(R.id.header_settings).apply {
-            setOnClickListener {
-                openMenu(it)
-            }
-        }
-    }
-
-    private fun openMenu(view: View) {
-        val popup = DialogMenu(view)
-        popup.show(createMenuList()) {
-            popup.dismiss()
-            when (it.id) {
-                "config" -> {
-                    mainScope.launch {
-                        view.context.startActivity(
-                            MainActivity.navigateIntent(
-                                view.context,
-                                "${Routes.MAIN}/1",
-                            ),
-                        )
-                    }
-                }
-
-                "reload" -> {
-                    rootView.findViewById<RecyclerView>(R.id.recycler).recycledViewPool.clear()
-                    refreshNotifications()
-                }
-
-                "restart" -> {
-                    val application: NeoApp by inject(NeoApp::class.java)
-                    application.restart(false)
-                }
-            }
-        }
     }
 
     override fun onDestroy() {
@@ -382,11 +219,4 @@ class OverlayView(
             articles.syncAllFeeds()
         }
     }
-
-    private fun createMenuList(): List<MenuItem> =
-        listOf(
-            MenuItem(R.drawable.ic_arrow_clockwise, R.string.action_reload, 0, "reload"),
-            MenuItem(R.drawable.ic_gear, R.string.title_settings, 2, "config"),
-            MenuItem(R.drawable.ic_power, R.string.action_restart, 2, "restart"),
-        )
 }
