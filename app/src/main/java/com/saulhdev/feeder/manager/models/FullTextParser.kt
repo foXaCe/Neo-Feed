@@ -39,7 +39,7 @@ class FullTextWorker(
     val context: Context,
     workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
-    private val okHttpClient: OkHttpClient = OkHttpClient.Builder().build()
+    private val okHttpClient: OkHttpClient by inject(OkHttpClient::class.java)
     val repository: ArticleRepository by inject(ArticleRepository::class.java)
 
     override suspend fun doWork(): Result {

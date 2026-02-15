@@ -46,15 +46,9 @@ import java.util.concurrent.TimeUnit
 
 private const val YOUTUBE_CHANNEL_ID_ATTR = "data-channel-external-id"
 
-class FeedParser {
-    private val client =
-        OkHttpClient
-            .Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .build()
-
+class FeedParser(
+    private val client: OkHttpClient,
+) {
     private val jsonFeedParser: JsonFeedParser = JsonFeedParser()
 
     private suspend fun getFeedIconAtUrl(url: URL): String? =
