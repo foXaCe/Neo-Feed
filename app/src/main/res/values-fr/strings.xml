@@ -145,4 +145,6 @@
     <string name="action_open_smry">Ouvrir dans SMRY</string>
     <string name="share_feed">Partager le flux</string>
     <string name="share_chooser_title">Où envoyer ?</string>
+    <string name="suggested_feeds">Flux suggérés</string>
+    <string name="feed_already_added">Déjà ajouté</string>
 </resources>
