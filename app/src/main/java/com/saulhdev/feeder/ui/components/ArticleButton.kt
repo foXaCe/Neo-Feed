@@ -37,8 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.saulhdev.feeder.R
 import com.saulhdev.feeder.ui.icons.Phosphor
 import com.saulhdev.feeder.ui.icons.phosphor.HeartStraight
 import com.saulhdev.feeder.ui.icons.phosphor.HeartStraightFill
@@ -46,14 +48,20 @@ import com.saulhdev.feeder.ui.icons.phosphor.ShareNetwork
 import kotlinx.coroutines.launch
 
 @Composable
-fun FavoriteButton(bookmarked: Boolean, onClick: () -> Unit) {
+fun FavoriteButton(
+    bookmarked: Boolean,
+    onClick: () -> Unit,
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val coroutineScope = rememberCoroutineScope()
     val scale = remember { Animatable(1f) }
     val favoriteIcon by remember(bookmarked) {
         mutableStateOf(
-            if (bookmarked) Phosphor.HeartStraightFill
-            else Phosphor.HeartStraight
+            if (bookmarked) {
+                Phosphor.HeartStraightFill
+            } else {
+                Phosphor.HeartStraight
+            },
         )
     }
     val favoriteColor by animateColorAsState(
@@ -62,9 +70,10 @@ fun FavoriteButton(bookmarked: Boolean, onClick: () -> Unit) {
     )
 
     IconButton(
-        modifier = Modifier
-            .size(size = 36.dp)
-            .clip(CircleShape),
+        modifier =
+            Modifier
+                .size(size = 36.dp)
+                .clip(CircleShape),
         onClick = {
             coroutineScope.launch {
                 scale.animateTo(
@@ -77,31 +86,32 @@ fun FavoriteButton(bookmarked: Boolean, onClick: () -> Unit) {
                 )
                 onClick()
             }
-        }
+        },
     ) {
         Icon(
             imageVector = favoriteIcon,
             contentDescription = " ",
             tint = favoriteColor,
-            modifier = Modifier
-                .scale(scale = scale.value)
-                .size(size = 28.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    coroutineScope.launch {
-                        scale.animateTo(
-                            0.8f,
-                            animationSpec = tween(100),
-                        )
-                        scale.animateTo(
-                            1f,
-                            animationSpec = tween(100),
-                        )
-                        onClick()
-                    }
-                }
+            modifier =
+                Modifier
+                    .scale(scale = scale.value)
+                    .size(size = 28.dp)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                    ) {
+                        coroutineScope.launch {
+                            scale.animateTo(
+                                0.8f,
+                                animationSpec = tween(100),
+                            )
+                            scale.animateTo(
+                                1f,
+                                animationSpec = tween(100),
+                            )
+                            onClick()
+                        }
+                    },
         )
     }
 }
@@ -109,13 +119,15 @@ fun FavoriteButton(bookmarked: Boolean, onClick: () -> Unit) {
 @Composable
 fun ShareButton(onClick: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
-    val scale = remember {
-        Animatable(1f)
-    }
+    val scale =
+        remember {
+            Animatable(1f)
+        }
     IconButton(
-        modifier = Modifier
-            .size(size = 36.dp)
-            .clip(CircleShape),
+        modifier =
+            Modifier
+                .size(size = 36.dp)
+                .clip(CircleShape),
         onClick = {
             coroutineScope.launch {
                 scale.animateTo(
@@ -128,16 +140,15 @@ fun ShareButton(onClick: () -> Unit) {
                 )
                 onClick()
             }
-        }
+        },
     ) {
         Icon(
             imageVector = Phosphor.ShareNetwork,
-            contentDescription = "Share feed",
-            modifier = Modifier.size(size = 28.dp)
+            contentDescription = stringResource(R.string.share_feed),
+            modifier = Modifier.size(size = 28.dp),
         )
     }
 }
-
 
 @Preview
 @Composable

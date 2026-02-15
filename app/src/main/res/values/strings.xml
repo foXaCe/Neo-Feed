@@ -157,4 +157,6 @@
     <string name="action_delete">Delete</string>
     <string name="action_save">Save</string>
     <string name="action_open_smry">Open in SMRY</string>
+    <string name="share_feed">Share feed</string>
+    <string name="share_chooser_title">Where to send?</string>
 </resources>

@@ -21,7 +21,10 @@ import kotlin.system.exitProcess
 
 interface ToastMaker {
     suspend fun makeToast(text: String)
-    suspend fun makeToast(@StringRes resId: Int)
+
+    suspend fun makeToast(
+        @StringRes resId: Int,
+    )
 }
 
 fun Context.makeToast(text: String) {
@@ -51,12 +54,13 @@ private fun Context.restartFeed() {
 
     // Create a pending intent so the application is restarted after System.exit(0) was called.
     // We use an AlarmManager to call this intent in 100ms
-    val mPendingIntent: PendingIntent = PendingIntent.getActivity(
-        this,
-        0,
-        intent,
-        PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
+    val mPendingIntent: PendingIntent =
+        PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     val mgr: AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
     mgr[AlarmManager.RTC, System.currentTimeMillis() + 100] = mPendingIntent
 
@@ -68,21 +72,23 @@ fun Context.launchView(url: String) {
     startActivity(
         Intent(
             Intent.ACTION_VIEW,
-            url.toUri()
-        )
+            url.toUri(),
+        ),
     )
 }
 
-fun Context.shareIntent(url: String, title: String) {
+fun Context.shareIntent(
+    url: String,
+    title: String,
+) {
     val shareIntent = Intent(Intent.ACTION_SEND)
     shareIntent.type = "text/plain"
     shareIntent.putExtra(Intent.EXTRA_TITLE, title)
     shareIntent.putExtra(Intent.EXTRA_SUBJECT, title)
     shareIntent.putExtra(Intent.EXTRA_TEXT, url)
 
-    startActivity(Intent.createChooser(shareIntent, "Where to Send?"))
+    startActivity(Intent.createChooser(shareIntent, getString(R.string.share_chooser_title)))
 }
-
 
 fun Context.setCustomTheme() {
     AppCompatDelegate.setDefaultNightMode(nightMode)
@@ -92,31 +98,35 @@ fun Context.setCustomTheme() {
 }
 
 val Context.isDynamicTheme
-    get() = listOf("auto_system", "auto_system_black")
-        .contains(get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue())
+    get() =
+        listOf("auto_system", "auto_system_black")
+            .contains(get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue())
 
 val Context.nightMode
-    get() = when (get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue()) {
-        "light"         -> AppCompatDelegate.MODE_NIGHT_NO
-        "dark", "black" -> AppCompatDelegate.MODE_NIGHT_YES
-        else            -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-    }
+    get() =
+        when (get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue()) {
+            "light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "dark", "black" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
 
 val Context.isDarkTheme: Boolean
-    get() = when (get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue()) {
-        "dark", "black"
+    get() =
+        when (get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue()) {
+            "dark", "black",
             -> true
 
-        "light"
+            "light",
             -> false
 
-        else -> resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES // "auto_system"
-    }
+            else -> resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES // "auto_system"
+        }
 
 val Context.isBlackTheme: Boolean
-    get() = when (get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue()) {
-        "black", "auto_system_black"
+    get() =
+        when (get<FeedPreferences>(FeedPreferences::class.java).overlayTheme.getValue()) {
+            "black", "auto_system_black",
             -> true
 
-        else -> false
-    }
+            else -> false
+        }
