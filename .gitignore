@@ -9,8 +9,16 @@ bin/
 build/
 gen/
 out/
-.idea/
 .kotlin/
+
+# IDE / Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+*.code-workspace
 
 # Gradle files
 .gradle/
@@ -18,3 +26,21 @@ google-gsa/build/
 app/build/
 release/
 neo/
+local.properties
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Signing
+*.jks
+*.keystore
+!debug.keystore
+
+# Claude Code
+CLAUDE.md
+AGENTS.md
